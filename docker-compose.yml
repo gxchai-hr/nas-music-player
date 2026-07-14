@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  music-player:
+    build: .
+    container_name: nas-music
+    ports:
+      - "${PORT:-8080}:8080"
+    volumes:
+      - ${MUSIC_DIR:-./music}:/music:ro
+      - ${DATA_DIR:-./data}:/app/data
+      - ${CONFIG_DIR:-./config}:/app/config
+    environment:
+      - MUSIC_DIR=/music
+      - DATA_DIR=/app/data
+      - CONFIG_DIR=/app/config
+      - SECRET_KEY=${SECRET_KEY:?请在 .env 文件中设置 SECRET_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
