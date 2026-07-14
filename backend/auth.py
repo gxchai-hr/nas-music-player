@@ -108,7 +108,12 @@ def bootstrap_admin():
         try:
             with open(users_json_path, "r", encoding="utf-8") as f:
                 users_data = json.load(f)
-            for u in users_data:
+            # Support both formats: {"users": [...]} or [...]
+            if isinstance(users_data, dict):
+                users_list = users_data.get("users", [])
+            else:
+                users_list = users_data
+            for u in users_list:
                 existing = get_user_by_username(u["username"])
                 if not existing:
                     pw = u.get("password", "")
