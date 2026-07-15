@@ -148,8 +148,8 @@ const App = (() => {
       container.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon">🎵</div>
-          <h3>No music found</h3>
-          <p>Add music files to your NAS library and scan.</p>
+          <h3>暂无音乐</h3>
+          <p>请将音乐文件添加到NAS目录后扫描</p>
         </div>`;
       return;
     }
@@ -158,17 +158,17 @@ const App = (() => {
 
     container.innerHTML = `
       <div class="view-header">
-        <h1>All Music</h1>
+        <h1>全部音乐</h1>
         <div class="view-actions">
-          <button class="btn btn-primary" id="btn-play-all">▶ Play All</button>
+          <button class="btn btn-primary" id="btn-play-all">▶ 播放全部</button>
         </div>
       </div>
       <div class="song-list">
         <div class="song-list-header">
           <span>#</span>
-          <span>Title</span>
+          <span>歌曲</span>
           <span>Artist</span>
-          <span>Duration</span>
+          <span>时长</span>
           <span></span>
         </div>
         ${songData.map((song, i) => renderSongRow(song, i + 1)).join('')}
@@ -190,12 +190,12 @@ const App = (() => {
             <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
           </span>
         </div>
-        <div class="song-title">${escapeHtml(song.title || 'Unknown')}</div>
-        <div class="song-artist">${escapeHtml(song.artist || 'Unknown')}</div>
+        <div class="song-title">${escapeHtml(song.title || '未知')}</div>
+        <div class="song-artist">${escapeHtml(song.artist || '未知')}</div>
         <div class="song-duration">${Player.formatTime(song.duration)}</div>
         <div class="song-actions">
-          <button class="btn-icon btn-add-playlist" title="Add to playlist" data-song-id="${song.id}">➕</button>
-          <button class="btn-icon btn-add-queue" title="Add to queue" data-song-id="${song.id}">📋</button>
+          <button class="btn-icon btn-add-playlist" title="添加到歌单" data-song-id="${song.id}">➕</button>
+          <button class="btn-icon btn-add-queue" title="添加到队列" data-song-id="${song.id}">📋</button>
         </div>
       </div>`;
   }
@@ -207,7 +207,7 @@ const App = (() => {
       container.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon">🎤</div>
-          <h3>No artists found</h3>
+          <h3>暂无艺术家</h3>
           <p>Artists will appear once music is scanned.</p>
         </div>`;
       return;
@@ -221,7 +221,7 @@ const App = (() => {
         ${allArtists.map(artist => `
           <div class="artist-card" data-artist-id="${artist.id}">
             <div class="artist-avatar">🎤</div>
-            <h3>${escapeHtml(artist.name || 'Unknown')}</h3>
+            <h3>${escapeHtml(artist.name || '未知')}</h3>
             <p>${artist.song_count || 0} songs</p>
           </div>
         `).join('')}
@@ -236,7 +236,7 @@ const App = (() => {
 
   async function renderArtistDetail(artistId) {
     const container = $('#view-container');
-    container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Loading...</p></div>`;
+    container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>加载中...</p></div>`;
 
     try {
       const artist = await API.getArtist(artistId);
@@ -246,19 +246,19 @@ const App = (() => {
         <div class="view-header">
           <div>
             <button class="btn btn-outline" id="btn-back-artists" style="margin-bottom:12px">← Back to Artists</button>
-            <h1>${escapeHtml(artist.name || 'Unknown')}</h1>
+            <h1>${escapeHtml(artist.name || '未知')}</h1>
             <p style="color:var(--text-secondary)">${songs.length} songs</p>
           </div>
           <div class="view-actions">
-            <button class="btn btn-primary" id="btn-play-all-artist">▶ Play All</button>
+            <button class="btn btn-primary" id="btn-play-all-artist">▶ 播放全部</button>
           </div>
         </div>
         <div class="song-list">
           <div class="song-list-header">
             <span>#</span>
-            <span>Title</span>
+            <span>歌曲</span>
             <span>Album</span>
-            <span>Duration</span>
+            <span>时长</span>
             <span></span>
           </div>
           ${songs.map((s, i) => `
@@ -270,12 +270,12 @@ const App = (() => {
                   <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
                 </span>
               </div>
-              <div class="song-title">${escapeHtml(s.title || 'Unknown')}</div>
+              <div class="song-title">${escapeHtml(s.title || '未知')}</div>
               <div class="song-artist">${escapeHtml(s.album || '—')}</div>
               <div class="song-duration">${Player.formatTime(s.duration)}</div>
               <div class="song-actions">
-                <button class="btn-icon btn-add-playlist" title="Add to playlist" data-song-id="${s.id}">➕</button>
-                <button class="btn-icon btn-add-queue" title="Add to queue" data-song-id="${s.id}">📋</button>
+                <button class="btn-icon btn-add-playlist" title="添加到歌单" data-song-id="${s.id}">➕</button>
+                <button class="btn-icon btn-add-queue" title="添加到队列" data-song-id="${s.id}">📋</button>
               </div>
             </div>
           `).join('')}
@@ -292,7 +292,7 @@ const App = (() => {
         }
       });
     } catch (e) {
-      container.innerHTML = `<div class="empty-state"><h3>Error loading artist</h3><p>${e.message}</p></div>`;
+      container.innerHTML = `<div class="empty-state"><h3>加载艺术家失败</h3><p>${e.message}</p></div>`;
     }
   }
 
@@ -303,7 +303,7 @@ const App = (() => {
       container.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon">💿</div>
-          <h3>No albums found</h3>
+          <h3>暂无专辑</h3>
           <p>Albums will appear once music is scanned.</p>
         </div>`;
       return;
@@ -323,8 +323,8 @@ const App = (() => {
               </div>
             </div>
             <div class="album-info">
-              <h3>${escapeHtml(album.title || 'Unknown')}</h3>
-              <p>${escapeHtml(album.artist || 'Unknown')}</p>
+              <h3>${escapeHtml(album.title || '未知')}</h3>
+              <p>${escapeHtml(album.artist || '未知')}</p>
             </div>
           </div>
         `).join('')}
@@ -339,7 +339,7 @@ const App = (() => {
 
   async function renderAlbumDetail(albumId) {
     const container = $('#view-container');
-    container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Loading...</p></div>`;
+    container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>加载中...</p></div>`;
 
     try {
       const album = await API.getAlbum(albumId);
@@ -349,18 +349,18 @@ const App = (() => {
         <div class="view-header">
           <div>
             <button class="btn btn-outline" id="btn-back-albums" style="margin-bottom:12px">← Back to Albums</button>
-            <h1>${escapeHtml(album.title || 'Unknown')}</h1>
-            <p style="color:var(--text-secondary)">${escapeHtml(album.artist || 'Unknown')} · ${songs.length} songs</p>
+            <h1>${escapeHtml(album.title || '未知')}</h1>
+            <p style="color:var(--text-secondary)">${escapeHtml(album.artist || '未知')} · ${songs.length} songs</p>
           </div>
           <div class="view-actions">
-            <button class="btn btn-primary" id="btn-play-all-album">▶ Play All</button>
+            <button class="btn btn-primary" id="btn-play-all-album">▶ 播放全部</button>
           </div>
         </div>
         <div class="song-list">
           <div class="song-list-header">
             <span>#</span>
-            <span>Title</span>
-            <span>Duration</span>
+            <span>歌曲</span>
+            <span>时长</span>
             <span></span>
           </div>
           ${songs.map((s, i) => `
@@ -372,11 +372,11 @@ const App = (() => {
                   <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
                 </span>
               </div>
-              <div class="song-title">${escapeHtml(s.title || 'Unknown')}</div>
+              <div class="song-title">${escapeHtml(s.title || '未知')}</div>
               <div class="song-duration">${Player.formatTime(s.duration)}</div>
               <div class="song-actions">
-                <button class="btn-icon btn-add-playlist" title="Add to playlist" data-song-id="${s.id}">➕</button>
-                <button class="btn-icon btn-add-queue" title="Add to queue" data-song-id="${s.id}">📋</button>
+                <button class="btn-icon btn-add-playlist" title="添加到歌单" data-song-id="${s.id}">➕</button>
+                <button class="btn-icon btn-add-queue" title="添加到队列" data-song-id="${s.id}">📋</button>
               </div>
             </div>
           `).join('')}
@@ -393,13 +393,13 @@ const App = (() => {
         }
       });
     } catch (e) {
-      container.innerHTML = `<div class="empty-state"><h3>Error loading album</h3><p>${e.message}</p></div>`;
+      container.innerHTML = `<div class="empty-state"><h3>加载专辑失败</h3><p>${e.message}</p></div>`;
     }
   }
 
   async function renderPlaylistView(playlistId) {
     const container = $('#view-container');
-    container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Loading...</p></div>`;
+    container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>加载中...</p></div>`;
 
     try {
       const playlist = await API.getPlaylist(playlistId);
@@ -413,8 +413,8 @@ const App = (() => {
               <h1>${escapeHtml(playlist.name || 'Playlist')}</h1>
               <p>${songs.length} songs</p>
               <div class="playlist-detail-actions">
-                <button class="btn btn-primary" id="btn-play-playlist">▶ Play All</button>
-                <button class="btn btn-outline btn-danger" id="btn-delete-playlist">🗑 Delete</button>
+                <button class="btn btn-primary" id="btn-play-playlist">▶ 播放全部</button>
+                <button class="btn btn-outline btn-danger" id="btn-delete-playlist">🗑 删除</button>
               </div>
             </div>
           </div>
@@ -423,9 +423,9 @@ const App = (() => {
           <div class="song-list">
             <div class="song-list-header">
               <span>#</span>
-              <span>Title</span>
+              <span>歌曲</span>
               <span>Artist</span>
-              <span>Duration</span>
+              <span>时长</span>
               <span></span>
             </div>
             ${songs.map((s, i) => `
@@ -437,12 +437,12 @@ const App = (() => {
                     <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
                   </span>
                 </div>
-                <div class="song-title">${escapeHtml(s.title || 'Unknown')}</div>
-                <div class="song-artist">${escapeHtml(s.artist || 'Unknown')}</div>
+                <div class="song-title">${escapeHtml(s.title || '未知')}</div>
+                <div class="song-artist">${escapeHtml(s.artist || '未知')}</div>
                 <div class="song-duration">${Player.formatTime(s.duration)}</div>
                 <div class="song-actions">
-                  <button class="btn-icon btn-remove-from-playlist" title="Remove" data-song-id="${s.id}">➖</button>
-                  <button class="btn-icon btn-add-queue" title="Add to queue" data-song-id="${s.id}">📋</button>
+                  <button class="btn-icon btn-remove-from-playlist" title="移除" data-song-id="${s.id}">➖</button>
+                  <button class="btn-icon btn-add-queue" title="添加到队列" data-song-id="${s.id}">📋</button>
                 </div>
               </div>
             `).join('')}
@@ -450,8 +450,8 @@ const App = (() => {
         ` : `
           <div class="empty-state">
             <div class="empty-icon">📋</div>
-            <h3>Playlist is empty</h3>
-            <p>Add songs from All Music or search.</p>
+            <h3>歌单为空</h3>
+            <p>Add songs from 全部音乐 or search.</p>
           </div>
         `}`;
 
@@ -466,12 +466,12 @@ const App = (() => {
         }
       });
 
-      // Delete playlist
+      // 删除 playlist
       $('#btn-delete-playlist').addEventListener('click', async () => {
-        if (confirm('Delete this playlist?')) {
+        if (confirm('删除 this playlist?')) {
           try {
             await API.deletePlaylist(playlistId);
-            toast('Playlist deleted', 'success');
+            toast('歌单已删除', 'success');
             await loadPlaylists();
             navigateTo('home');
           } catch (e) {
@@ -480,23 +480,23 @@ const App = (() => {
         }
       });
 
-      // Remove from playlist buttons
+      // 移除 from playlist buttons
       $$('.btn-remove-from-playlist').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           e.stopPropagation();
           const songId = parseInt(btn.dataset.songId);
           try {
             await API.removeFromPlaylist(playlistId, songId);
-            toast('Removed from playlist', 'success');
+            toast('移除d from playlist', 'success');
             await loadPlaylists();
             renderPlaylistView(playlistId);
           } catch (e) {
-            toast('Failed: ' + e.message, 'error');
+            toast('失败: ' + e.message, 'error');
           }
         });
       });
     } catch (e) {
-      container.innerHTML = `<div class="empty-state"><h3>Error loading playlist</h3><p>${e.message}</p></div>`;
+      container.innerHTML = `<div class="empty-state"><h3>加载歌单失败</h3><p>${e.message}</p></div>`;
     }
   }
 
@@ -533,9 +533,9 @@ const App = (() => {
       <div class="song-list">
         <div class="song-list-header">
           <span>#</span>
-          <span>Title</span>
+          <span>歌曲</span>
           <span>Artist</span>
-          <span>Duration</span>
+          <span>时长</span>
           <span></span>
         </div>
         ${results.map((song, i) => renderSongRow(song, i + 1)).join('')}
@@ -566,7 +566,7 @@ const App = (() => {
       });
     });
 
-    // Add to playlist buttons
+    // 添加到歌单 buttons
     $$('.btn-add-playlist').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -575,7 +575,7 @@ const App = (() => {
       });
     });
 
-    // Add to queue buttons
+    // 添加到队列 buttons
     $$('.btn-add-queue').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -604,7 +604,7 @@ const App = (() => {
       <li data-playlist-id="${p.id}" class="${currentRoute === `playlist/${p.id}` ? 'active' : ''}">
         <span class="playlist-icon">📋</span>
         <span>${escapeHtml(p.name)}</span>
-        <span class="playlist-delete" data-playlist-id="${p.id}" title="Delete">🗑</span>
+        <span class="playlist-delete" data-playlist-id="${p.id}" title="删除">🗑</span>
       </li>
     `).join('');
 
@@ -619,16 +619,16 @@ const App = (() => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const id = btn.dataset.playlistId;
-        if (confirm('Delete this playlist?')) {
+        if (confirm('删除 this playlist?')) {
           try {
             await API.deletePlaylist(id);
-            toast('Playlist deleted', 'success');
+            toast('歌单已删除', 'success');
             await loadPlaylists();
             if (currentRoute.startsWith('playlist/')) {
               navigateTo('home');
             }
           } catch (e) {
-            toast('Failed: ' + e.message, 'error');
+            toast('失败: ' + e.message, 'error');
           }
         }
       });
@@ -652,10 +652,10 @@ const App = (() => {
       <div class="queue-item${i === idx ? ' current' : ''}" data-index="${i}">
         <div class="queue-art">🎵</div>
         <div class="queue-info">
-          <div class="queue-title">${escapeHtml(song.title || 'Unknown')}</div>
-          <div class="queue-artist">${escapeHtml(song.artist || 'Unknown')}</div>
+          <div class="queue-title">${escapeHtml(song.title || '未知')}</div>
+          <div class="queue-artist">${escapeHtml(song.artist || '未知')}</div>
         </div>
-        <button class="btn-icon btn-sm btn-remove-queue queue-remove" data-index="${i}" title="Remove">✕</button>
+        <button class="btn-icon btn-sm btn-remove-queue queue-remove" data-index="${i}" title="移除">✕</button>
       </div>
     `).join('');
 
@@ -700,7 +700,7 @@ const App = (() => {
             toast('Added to playlist', 'success');
             modal.classList.add('hidden');
           } catch (e) {
-            toast('Failed: ' + e.message, 'error');
+            toast('失败: ' + e.message, 'error');
           }
         });
       });
@@ -728,19 +728,19 @@ const App = (() => {
             <div class="user-name">${escapeHtml(u.username)}</div>
             <div class="user-role">${u.role || 'user'}</div>
           </div>
-          ${u.username !== 'admin' ? `<button class="btn btn-sm btn-outline btn-danger" data-user-id="${u.id}">Delete</button>` : ''}
+          ${u.username !== 'admin' ? `<button class="btn btn-sm btn-outline btn-danger" data-user-id="${u.id}">删除</button>` : ''}
         </div>
       `).join('');
 
       list.querySelectorAll('.btn-danger').forEach(btn => {
         btn.addEventListener('click', async () => {
-          if (confirm('Delete this user?')) {
+          if (confirm('删除 this user?')) {
             try {
               await API.deleteUser(btn.dataset.userId);
-              toast('User deleted', 'success');
+              toast('用户已删除', 'success');
               loadAdminUsers();
             } catch (e) {
-              toast('Failed: ' + e.message, 'error');
+              toast('失败: ' + e.message, 'error');
             }
           }
         });
@@ -780,7 +780,7 @@ const App = (() => {
     const fill = $('#download-progress-fill');
     const status = $('#download-status');
 
-    filename.textContent = song.title || 'Unknown Song';
+    filename.textContent = song.title || '未知 Song';
     fill.style.width = '0%';
     status.textContent = 'Starting download...';
     modal.classList.remove('hidden');
@@ -935,11 +935,11 @@ const App = (() => {
 
       try {
         await API.createPlaylist(name);
-        toast('Playlist created!', 'success');
+        toast('歌单已创建!', 'success');
         $('#modal-create-playlist').classList.add('hidden');
         await loadPlaylists();
       } catch (e) {
-        toast('Failed: ' + e.message, 'error');
+        toast('失败: ' + e.message, 'error');
       }
     });
 
@@ -1004,7 +1004,7 @@ const App = (() => {
         $('#new-user-password').value = '';
         loadAdminUsers();
       } catch (e) {
-        toast('Failed: ' + e.message, 'error');
+        toast('失败: ' + e.message, 'error');
       }
     });
 
