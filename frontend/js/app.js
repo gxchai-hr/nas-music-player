@@ -949,14 +949,27 @@ const App = (() => {
 
     // ── Scan Library ──
     $('#btn-scan').addEventListener('click', async () => {
-      toast('Scanning library...', 'info');
+      toast('正在扫描音乐库...', 'info');
       try {
-        await API.triggerScan();
-        toast('Scan complete! Refreshing...', 'success');
+        await API.triggerScan(false);
+        toast('扫描完成！正在刷新...', 'success');
         await loadAppData();
         handleRoute(); // Re-render current view
       } catch (e) {
-        toast('Scan failed: ' + e.message, 'error');
+        toast('扫描失败: ' + e.message, 'error');
+      }
+    });
+
+    // ── Force Scan (update metadata) ──
+    $('#btn-scan-force').addEventListener('click', async () => {
+      toast('正在强制扫描（更新元数据）...', 'info');
+      try {
+        await API.triggerScan(true);
+        toast('强制扫描完成！正在刷新...', 'success');
+        await loadAppData();
+        handleRoute();
+      } catch (e) {
+        toast('扫描失败: ' + e.message, 'error');
       }
     });
 

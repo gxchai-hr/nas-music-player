@@ -49,16 +49,22 @@ def _extract_metadata(filepath: str) -> dict:
         logger.debug("mutagen failed for %s: %s", filepath, e)
 
     # Fallback: parse directory structure /artist/album/song.ext
-    if not artist or not album:
-        try:
-            rel = os.path.relpath(filepath, config.MUSIC_DIR)
-            parts = rel.split(os.sep)
-            if len(parts) >= 2 and not artist:
-                artist = parts[0]
-            if len(parts) >= 3 and not album:
-                album = parts[1]
-        except ValueError:
-            pass
+    # Always try if metadata is empty or contains default values
+    try:
+        rel = os.path.relpath(filepath, config.MUSIC_DIR)
+        parts = rel.split(os.sep)
+        if len(parts) >= 2:
+            dir_artist = parts[0]
+            # Use directory artist if current is empty or Unknown
+            if not artist or artist in ('Unknown', 'Unknown Artist', ''):
+                artist = dir_artist
+        if len(parts) >= 3:
+            dir_album = parts[1]
+            # Use directory album if current is empty or Unknown
+            if not album or album in ('Unknown', 'Unknown Album', ''):
+                album = dir_album
+    except ValueError:
+        pass
 
     # Fallback: title from filename
     if not title:
@@ -73,12 +79,14 @@ def _extract_metadata(filepath: str) -> dict:
     }
 
 
-def scan_music_directory():
-    """Recursively scan MUSIC_DIR and update the database."""
+def scan_music_directory(force_update: bool = False):
+    """Recursively scan MUSIC_DIR and update the database.
+    If force_update=True, update metadata for existing songs too.
+    """
     if _scan_lock.locked():
         return {"scanned": 0, "skipped": 0, "removed": 0, "message": "Scan already in progress"}
     with _scan_lock:
-        logger.info("Starting scan of %s", config.MUSIC_DIR)
+        logger.info("Starting scan of %s (force_update=%s)", config.MUSIC_DIR, force_update)
 
         if not os.path.isdir(config.MUSIC_DIR):
             logger.warning("Music directory does not exist: %s", config.MUSIC_DIR)
@@ -105,6 +113,12 @@ def scan_music_directory():
 
             meta = _extract_metadata(filepath)
             try:
+                # Check if song already exists and needs update
+                existing = song_exists(filepath)
+                if existing and not force_update:
+                    scanned += 1
+                    continue
+                
                 insert_song(
                     title=meta["title"],
                     artist=meta["artist"],

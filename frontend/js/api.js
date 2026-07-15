@@ -158,8 +158,8 @@ const API = (() => {
     },
 
     // Library
-    async triggerScan() {
-      return request('POST', '/api/scan');
+    async triggerScan(force = false) {
+      return request('POST', `/api/scan?force=${force}`);
     },
 
     // Users (admin)

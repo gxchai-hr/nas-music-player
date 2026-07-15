@@ -389,8 +389,11 @@ def delete_playlist_endpoint(
 # ---------------------------------------------------------------------------
 
 @app.post("/api/scan")
-def trigger_scan(admin: dict = Depends(require_admin)):
-    result = scan_music_directory()
+def trigger_scan(
+    force: bool = Query(False),
+    admin: dict = Depends(require_admin),
+):
+    result = scan_music_directory(force_update=force)
     return {"message": "Scan complete", **result}
 
 
