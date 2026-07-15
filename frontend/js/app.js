@@ -80,6 +80,10 @@ const App = (() => {
         showMainApp();
         renderSearchResults(decodeURIComponent(parts.slice(1).join('/')));
         break;
+      case 'directory':
+        showMainApp();
+        renderDirectoryView(param || '');
+        break;
       default:
         showMainApp();
         renderSongList();

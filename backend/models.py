@@ -332,3 +332,116 @@ def cache_lyrics(song_id: int, lyrics_text: str, source: str = "online"):
     )
     conn.commit()
     conn.close()
+
+# ---------------------------------------------------------------------------
+# Directory browsing helpers
+# ---------------------------------------------------------------------------
+
+def get_directory_structure(subpath: str = ""):
+    """Get directory structure for browsing.
+    Returns list of {name, type, path, song_count} items.
+    """
+    conn = get_db()
+    base_dir = os.path.normpath(config.MUSIC_DIR)
+    
+    # Get all song paths
+    rows = conn.execute("SELECT path FROM songs ORDER BY path").fetchall()
+    conn.close()
+    
+    # Extract unique directories
+    dirs = set()
+    songs_in_path = []
+    
+    for row in rows:
+        song_path = row[0]
+        # Get relative path from music dir
+        try:
+            rel_path = os.path.relpath(song_path, base_dir)
+        except ValueError:
+            continue
+        
+        parts = rel_path.split(os.sep)
+        
+        if subpath:
+            # Filter to show only items under subpath
+            subpath_parts = subpath.split('/')
+            if len(parts) <= len(subpath_parts):
+                continue
+            if parts[:len(subpath_parts)] != subpath_parts:
+                continue
+            # Get the next level
+            if len(parts) > len(subpath_parts) + 1:
+                # This is a subdirectory
+                dir_name = parts[len(subpath_parts)]
+                dir_path = '/'.join(subpath_parts + [dir_name])
+                dirs.add(dir_path)
+            else:
+                # This is a song in current directory
+                songs_in_path.append(song_path)
+        else:
+            # Root level - get top-level directories
+            if len(parts) > 1:
+                dirs.add(parts[0])
+            else:
+                songs_in_path.append(song_path)
+    
+    # Build result
+    result = []
+    for dir_path in sorted(dirs):
+        dir_name = dir_path.split('/')[-1]
+        # Count songs in this directory (recursively)
+        count = 0
+        for row in rows:
+            try:
+                rel = os.path.relpath(row[0], base_dir)
+                if rel.startswith(dir_path.replace('/', os.sep)):
+                    count += 1
+            except ValueError:
+                continue
+        result.append({
+            "name": dir_name,
+            "type": "directory",
+            "path": dir_path,
+            "song_count": count
+        })
+    
+    # Add songs in current directory
+    for song_path in songs_in_path:
+        song = get_song_by_path(song_path)
+        if song:
+            result.append({
+                "name": os.path.basename(song_path),
+                "type": "song",
+                "path": song_path,
+                "song": song
+            })
+    
+    return result
+
+
+def get_song_by_path(path: str):
+    """Get a song by its file path."""
+    conn = get_db()
+    row = conn.execute("SELECT * FROM songs WHERE path = ?", (path,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_songs_by_directory(subpath: str):
+    """Get all songs in a directory (recursively)."""
+    conn = get_db()
+    base_dir = os.path.normpath(config.MUSIC_DIR)
+    
+    rows = conn.execute("SELECT * FROM songs ORDER BY path").fetchall()
+    conn.close()
+    
+    songs = []
+    for row in rows:
+        try:
+            rel_path = os.path.relpath(row["path"], base_dir)
+            if rel_path.startswith(subpath.replace('/', os.sep)):
+                songs.append(dict(row))
+        except ValueError:
+            continue
+    
+    return songs

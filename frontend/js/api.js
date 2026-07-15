@@ -180,6 +180,17 @@ const API = (() => {
       return request('PUT', '/api/theme', { theme });
     },
 
+    // Directory browsing
+    async getDirectory(path = '') {
+      const res = await request('GET', `/api/directory?path=${encodeURIComponent(path)}`);
+      return res?.items || [];
+    },
+
+    async getDirectorySongs(path) {
+      const res = await request('GET', `/api/directory/songs?path=${encodeURIComponent(path)}`);
+      return res?.songs || [];
+    },
+
     // Streaming / Download URLs
     getStreamUrl(songId) {
       return streamUrl(`/api/stream/${songId}`);

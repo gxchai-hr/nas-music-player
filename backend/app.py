@@ -22,6 +22,7 @@ from models import (
     get_song_by_id, list_artists, list_albums, list_songs, search_songs,
     create_playlist, get_user_playlists, add_to_playlist, remove_from_playlist,
     delete_playlist, playlist_exists,
+    get_directory_structure, get_songs_by_directory,
 )
 from auth import (
     hash_password, verify_password, create_token,
@@ -172,6 +173,26 @@ def search(
     user: dict = Depends(get_current_user),
 ):
     return {"songs": search_songs(q)}
+
+
+@app.get("/api/directory")
+def get_directory(
+    path: str = Query(""),
+    user: dict = Depends(get_current_user),
+):
+    """Get directory structure for browsing."""
+    items = get_directory_structure(subpath=path)
+    return {"items": items, "path": path}
+
+
+@app.get("/api/directory/songs")
+def get_directory_songs(
+    path: str = Query(...),
+    user: dict = Depends(get_current_user),
+):
+    """Get all songs in a directory."""
+    songs = get_songs_by_directory(subpath=path)
+    return {"songs": songs}
 
 
 @app.get("/api/artists/{artist_name}")
