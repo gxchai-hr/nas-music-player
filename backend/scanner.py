@@ -74,25 +74,25 @@ def _extract_metadata(filepath: str) -> dict:
 
 
 def scan_music_directory():
+    """Recursively scan MUSIC_DIR and update the database."""
     if _scan_lock.locked():
         return {"scanned": 0, "skipped": 0, "removed": 0, "message": "Scan already in progress"}
     with _scan_lock:
-    """Recursively scan MUSIC_DIR and update the database."""
-    logger.info("Starting scan of %s", config.MUSIC_DIR)
+        logger.info("Starting scan of %s", config.MUSIC_DIR)
 
-    if not os.path.isdir(config.MUSIC_DIR):
-        logger.warning("Music directory does not exist: %s", config.MUSIC_DIR)
-        return {"scanned": 0, "skipped": 0, "removed": 0}
+        if not os.path.isdir(config.MUSIC_DIR):
+            logger.warning("Music directory does not exist: %s", config.MUSIC_DIR)
+            return {"scanned": 0, "skipped": 0, "removed": 0}
 
-    scanned = 0
-    skipped = 0
-    existing_paths: set = set()
+        scanned = 0
+        skipped = 0
+        existing_paths = set()
 
-    for root, _dirs, files in os.walk(config.MUSIC_DIR):
-        for filename in files:
-            ext = os.path.splitext(filename)[1].lower()
-            if ext not in AUDIO_EXTENSIONS:
-                continue
+        for root, _dirs, files in os.walk(config.MUSIC_DIR):
+            for filename in files:
+                ext = os.path.splitext(filename)[1].lower()
+                if ext not in AUDIO_EXTENSIONS:
+                    continue
 
             filepath = os.path.abspath(os.path.join(root, filename))
             existing_paths.add(filepath)
