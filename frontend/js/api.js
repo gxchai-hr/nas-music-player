@@ -114,11 +114,11 @@ const API = (() => {
       return request('GET', `/api/songs/${id}`);
     },
 
-    async getSongsByArtist(artistId) {
+    async getSongsByArtist(artistName) {
       return request('GET', `/api/artists/${artistId}/songs`);
     },
 
-    async getSongsByAlbum(albumId) {
+    async getSongsByAlbum(albumName) {
       return request('GET', `/api/albums/${albumId}/songs`);
     },
 

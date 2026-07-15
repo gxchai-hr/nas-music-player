@@ -223,7 +223,7 @@ const App = (() => {
       </div>
       <div class="artist-grid">
         ${allArtists.map(artist => `
-          <div class="artist-card" data-artist-id="${artist.id}">
+          <div class="artist-card" data-artist-name="${artist}">
             <div class="artist-avatar">🎤</div>
             <h3>${escapeHtml(artist.name || '未知')}</h3>
             <p>${artist.song_count || 0} songs</p>
@@ -233,18 +233,18 @@ const App = (() => {
 
     $$('.artist-card').forEach(card => {
       card.addEventListener('click', () => {
-        navigateTo(`artist/${card.dataset.artistId}`);
+        navigateTo(`artist/${card.dataset.artistName}`);
       });
     });
   }
 
-  async function renderArtistDetail(artistId) {
+  async function renderArtistDetail(artistName) {
     const container = $('#view-container');
     container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>加载中...</p></div>`;
 
     try {
-      const artist = await API.getArtist(artistId);
-      const songs = await API.getSongsByArtist(artistId);
+      const artist = await API.getArtist(artistName);
+      const songs = await API.getSongsByArtist(artistName);
 
       container.innerHTML = `
         <div class="view-header">
@@ -319,7 +319,7 @@ const App = (() => {
       </div>
       <div class="album-grid">
         ${allAlbums.map(album => `
-          <div class="album-card" data-album-id="${album.id}">
+          <div class="album-card" data-album-name="${album}">
             <div class="album-art">
               💿
               <div class="album-play-overlay">
@@ -336,18 +336,18 @@ const App = (() => {
 
     $$('.album-card').forEach(card => {
       card.addEventListener('click', () => {
-        navigateTo(`album/${card.dataset.albumId}`);
+        navigateTo(`album/${card.dataset.albumName}`);
       });
     });
   }
 
-  async function renderAlbumDetail(albumId) {
+  async function renderAlbumDetail(albumName) {
     const container = $('#view-container');
     container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>加载中...</p></div>`;
 
     try {
-      const album = await API.getAlbum(albumId);
-      const songs = await API.getSongsByAlbum(albumId);
+      const album = await API.getAlbum(albumName);
+      const songs = await API.getSongsByAlbum(albumName);
 
       container.innerHTML = `
         <div class="view-header">
@@ -504,7 +504,92 @@ const App = (() => {
     }
   }
 
-  function renderSearchResults(query) {
+  // ── Directory Browsing ──
+  async function renderDirectoryView(dirPath) {
+    const container = $('#view-container');
+    container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>加载中...</p></div>';
+
+    try {
+      const items = await API.getDirectory(dirPath);
+      
+      if (!items || items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📁</div>
+            <h3>目录为空</h3>
+            <p>此目录下没有音乐文件</p>
+          </div>`;
+        return;
+      }
+
+      // Build breadcrumb
+      const pathParts = dirPath ? dirPath.split('/') : [];
+      let breadcrumb = '<a href="#directory" class="breadcrumb-link">🎵 根目录</a>';
+      let currentPath = '';
+      for (const part of pathParts) {
+        currentPath += (currentPath ? '/' : '') + part;
+        breadcrumb += ` / <a href="#directory/${currentPath}" class="breadcrumb-link">${part}</a>`;
+      }
+
+      // Separate directories and songs
+      const dirs = items.filter(i => i.type === 'directory');
+      const songs = items.filter(i => i.type === 'song');
+
+      let html = `
+        <div class="view-header">
+          <div>
+            <h1>📁 目录浏览</h1>
+            <div class="breadcrumb">${breadcrumb}</div>
+          </div>
+          ${songs.length > 0 ? '<div class="view-actions"><button class="btn btn-primary" id="btn-play-all-dir">▶ 播放全部</button></div>' : ''}
+        </div>`;
+
+      // Show directories
+      if (dirs.length > 0) {
+        html += '<div class="directory-grid">';
+        for (const dir of dirs) {
+          html += `
+            <a href="#directory/${dir.path}" class="directory-card">
+              <div class="directory-icon">📁</div>
+              <div class="directory-name">${escapeHtml(dir.name)}</div>
+              <div class="directory-count">${dir.song_count} 首</div>
+            </a>`;
+        }
+        html += '</div>';
+      }
+
+      // Show songs
+      if (songs.length > 0) {
+        currentViewSongs = songs.map(i => i.song);
+        html += `
+          <div class="song-list">
+            <div class="song-list-header">
+              <span>#</span>
+              <span>歌曲</span>
+              <span>艺术家</span>
+              <span>时长</span>
+              <span></span>
+            </div>
+            ${songs.map((item, i) => renderSongRow(item.song, i + 1)).join('')}
+          </div>`;
+      }
+
+      container.innerHTML = html;
+      bindSongListEvents();
+
+      // Play all button
+      const playAllBtn = $('#btn-play-all-dir');
+      if (playAllBtn && currentViewSongs.length > 0) {
+        playAllBtn.addEventListener('click', () => {
+          Player.playSongDirect(currentViewSongs[0], currentViewSongs);
+        });
+      }
+    } catch (e) {
+      container.innerHTML = `<div class="empty-state"><h3>加载失败</h3><p>${e.message}</p></div>`;
+    }
+  }
+
+    function renderSearchResults(query) {
     const container = $('#view-container');
 
     if (!query || query.trim() === '') {
