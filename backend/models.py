@@ -4,6 +4,7 @@ SQLite database models and helper functions (raw sqlite3, no ORM).
 import sqlite3
 import os
 from datetime import datetime, timezone
+import config
 from config import DATABASE_PATH
 
 
