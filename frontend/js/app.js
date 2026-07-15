@@ -225,8 +225,8 @@ const App = (() => {
         ${allArtists.map(artist => `
           <div class="artist-card" data-artist-name="${artist}">
             <div class="artist-avatar">🎤</div>
-            <h3>${escapeHtml(artist.name || '未知')}</h3>
-            <p>${artist.song_count || 0} songs</p>
+            <h3>${escapeHtml(artist || '未知')}</h3>
+            <p>${0} songs</p>
           </div>
         `).join('')}
       </div>`;
@@ -243,14 +243,14 @@ const App = (() => {
     container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>加载中...</p></div>`;
 
     try {
-      const artist = await API.getArtist(artistName);
+      const displayName = artistName;
       const songs = await API.getSongsByArtist(artistName);
 
       container.innerHTML = `
         <div class="view-header">
           <div>
-            <button class="btn btn-outline" id="btn-back-artists" style="margin-bottom:12px">← Back to Artists</button>
-            <h1>${escapeHtml(artist.name || '未知')}</h1>
+            <button class="btn btn-outline" id="btn-back-artists" style="margin-bottom:12px">← 返回艺术家</button>
+            <h1>${escapeHtml(displayName || '未知')}</h1>
             <p style="color:var(--text-secondary)">${songs.length} songs</p>
           </div>
           <div class="view-actions">
@@ -327,8 +327,8 @@ const App = (() => {
               </div>
             </div>
             <div class="album-info">
-              <h3>${escapeHtml(album.title || '未知')}</h3>
-              <p>${escapeHtml(album.artist || '未知')}</p>
+              <h3>${escapeHtml(album || '未知')}</h3>
+              <p>${escapeHtml('')}</p>
             </div>
           </div>
         `).join('')}
@@ -346,15 +346,15 @@ const App = (() => {
     container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>加载中...</p></div>`;
 
     try {
-      const album = await API.getAlbum(albumName);
+      const displayName = albumName;
       const songs = await API.getSongsByAlbum(albumName);
 
       container.innerHTML = `
         <div class="view-header">
           <div>
             <button class="btn btn-outline" id="btn-back-albums" style="margin-bottom:12px">← Back to Albums</button>
-            <h1>${escapeHtml(album.title || '未知')}</h1>
-            <p style="color:var(--text-secondary)">${escapeHtml(album.artist || '未知')} · ${songs.length} songs</p>
+            <h1>${escapeHtml(album || '未知')}</h1>
+            <p style="color:var(--text-secondary)">${escapeHtml('')} · ${songs.length} songs</p>
           </div>
           <div class="view-actions">
             <button class="btn btn-primary" id="btn-play-all-album">▶ 播放全部</button>

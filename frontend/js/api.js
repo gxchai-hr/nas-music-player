@@ -92,8 +92,9 @@ const API = (() => {
       const res = await request('GET', '/api/artists'); return res?.artists || [];
     },
 
-    async getArtist(id) {
-      return request('GET', `/api/artists/${id}`);
+    async getArtist(name) {
+      const res = await request('GET', `/api/artists/${encodeURIComponent(name)}`);
+      return res?.name || name;
     },
 
     // Albums
@@ -101,8 +102,9 @@ const API = (() => {
       const res = await request('GET', '/api/albums'); return res?.albums || [];
     },
 
-    async getAlbum(id) {
-      return request('GET', `/api/albums/${id}`);
+    async getAlbum(name) {
+      const res = await request('GET', `/api/albums/${encodeURIComponent(name)}`);
+      return res?.name || name;
     },
 
     // Songs
