@@ -80,9 +80,9 @@ const API = (() => {
 
     // Auth
     async login(username, password) {
-      const data = await request('POST', '/api/auth/login', { username, password });
-      if (data && data.access_token) {
-        setToken(data.access_token);
+      const data = await request('POST', '/api/login', { username, password });
+      if (data && data.token) {
+        setToken(data.token);
       }
       return data;
     },
