@@ -139,3 +139,4 @@ def bootstrap_admin():
         print(f"  密码:   {initial_pw}")
         print(f"  请登录后立即修改密码！")
         print(f"{'='*60}\n")
+# Force rebuild 2026年07月15日 12:01:49
