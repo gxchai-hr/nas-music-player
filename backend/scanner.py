@@ -1,3 +1,6 @@
+import threading
+_scan_lock = threading.Lock()
+
 """
 Music directory scanner.
 Walks MUSIC_DIR, extracts metadata via mutagen, stores in SQLite.
@@ -71,6 +74,9 @@ def _extract_metadata(filepath: str) -> dict:
 
 
 def scan_music_directory():
+    if _scan_lock.locked():
+        return {"scanned": 0, "skipped": 0, "removed": 0, "message": "Scan already in progress"}
+    with _scan_lock:
     """Recursively scan MUSIC_DIR and update the database."""
     logger.info("Starting scan of %s", config.MUSIC_DIR)
 

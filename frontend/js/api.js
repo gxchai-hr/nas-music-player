@@ -89,7 +89,7 @@ const API = (() => {
 
     // Artists
     async getArtists() {
-      return request('GET', '/api/artists');
+      const res = await request('GET', '/api/artists'); return res?.artists || [];
     },
 
     async getArtist(id) {
@@ -98,7 +98,7 @@ const API = (() => {
 
     // Albums
     async getAlbums() {
-      return request('GET', '/api/albums');
+      const res = await request('GET', '/api/albums'); return res?.albums || [];
     },
 
     async getAlbum(id) {
@@ -107,7 +107,7 @@ const API = (() => {
 
     // Songs
     async getSongs() {
-      return request('GET', '/api/songs');
+      const res = await request('GET', '/api/songs'); return res?.songs || [];
     },
 
     async getSong(id) {
@@ -129,7 +129,7 @@ const API = (() => {
 
     // Playlists
     async getPlaylists() {
-      return request('GET', '/api/playlists');
+      const res = await request('GET', '/api/playlists'); return res?.playlists || [];
     },
 
     async getPlaylist(id) {
@@ -164,7 +164,7 @@ const API = (() => {
 
     // Users (admin)
     async getUsers() {
-      return request('GET', '/api/users');
+      const res = await request('GET', '/api/users'); return res?.users || [];
     },
 
     async createUser(username, password, role) {
