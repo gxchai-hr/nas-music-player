@@ -182,11 +182,11 @@ const API = (() => {
 
     // Streaming / Download URLs
     getStreamUrl(songId) {
-      return streamUrl(`/api/songs/${songId}/stream`);
+      return streamUrl(`/api/stream/${songId}`);
     },
 
     getDownloadUrl(songId) {
-      return streamUrl(`/api/songs/${songId}/download`);
+      return streamUrl(`/api/download/${songId}`);
     },
   };
 })();
