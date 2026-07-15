@@ -137,29 +137,29 @@ const API = (() => {
     },
 
     async createPlaylist(name) {
-      return request('POST', '/api/playlists', { name });
+      return request('POST', '/api/playlist/create', { name });
     },
 
     async deletePlaylist(id) {
-      return request('DELETE', `/api/playlists/${id}`);
+      return request('DELETE', `/api/playlist/${id}`);
     },
 
     async addToPlaylist(playlistId, songId) {
-      return request('POST', `/api/playlists/${playlistId}/songs`, { song_id: songId });
+      return request('POST', `/api/playlist/${playlistId}/add`, { song_id: songId });
     },
 
     async removeFromPlaylist(playlistId, songId) {
-      return request('DELETE', `/api/playlists/${playlistId}/songs/${songId}`);
+      return request('POST', `/api/playlist/${playlistId}/remove`, { song_id: songId });
     },
 
     // Lyrics
     async getLyrics(songId) {
-      return request('GET', `/api/songs/${songId}/lyrics`);
+      return request('GET', `/api/lyrics/${songId}`);
     },
 
     // Library
     async triggerScan() {
-      return request('POST', '/api/library/scan');
+      return request('POST', '/api/scan');
     },
 
     // Users (admin)
@@ -177,7 +177,7 @@ const API = (() => {
 
     // Theme
     async updateTheme(theme) {
-      return request('POST', '/api/users/theme', { theme });
+      return request('PUT', '/api/theme', { theme });
     },
 
     // Streaming / Download URLs
