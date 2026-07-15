@@ -174,6 +174,26 @@ def search(
     return {"songs": search_songs(q)}
 
 
+@app.get("/api/artists/{artist_name}")
+def get_artist(artist_name: str, user: dict = Depends(get_current_user)):
+    songs = list_songs(artist=artist_name)
+    return {"name": artist_name, "songs": songs}
+
+
+@app.get("/api/albums/{album_name}")
+def get_album(album_name: str, user: dict = Depends(get_current_user)):
+    songs = list_songs(album=album_name)
+    return {"name": album_name, "songs": songs}
+
+
+@app.get("/api/songs/{song_id}")
+def get_song(song_id: int, user: dict = Depends(get_current_user)):
+    song = get_song_by_id(song_id)
+    if not song:
+        raise HTTPException(status_code=404, detail="Song not found")
+    return song
+
+
 # ---------------------------------------------------------------------------
 # Streaming & download
 # ---------------------------------------------------------------------------
@@ -292,6 +312,17 @@ def create_playlist_endpoint(
 @app.get("/api/playlists")
 def get_playlists(user: dict = Depends(get_current_user)):
     return {"playlists": get_user_playlists(user["id"])}
+
+
+@app.get("/api/playlists/{playlist_id}")
+def get_playlist(playlist_id: int, user: dict = Depends(get_current_user)):
+    if not playlist_exists(playlist_id, user["id"]):
+        raise HTTPException(status_code=404, detail="Playlist not found")
+    playlists = get_user_playlists(user["id"])
+    for pl in playlists:
+        if pl["id"] == playlist_id:
+            return pl
+    raise HTTPException(status_code=404, detail="Playlist not found")
 
 
 @app.post("/api/playlist/{playlist_id}/add")
