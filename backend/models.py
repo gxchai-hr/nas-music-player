@@ -150,25 +150,31 @@ def get_song_by_id(song_id: int):
 def list_artists():
     conn = get_db()
     rows = conn.execute(
-        "SELECT DISTINCT artist FROM songs WHERE artist != '' ORDER BY artist"
+        """SELECT artist, COUNT(*) as song_count 
+           FROM songs WHERE artist != '' AND artist != 'Unknown Artist' 
+           GROUP BY artist ORDER BY artist"""
     ).fetchall()
     conn.close()
-    return [dict(r)["artist"] for r in rows]
+    return [{"name": dict(r)["artist"], "song_count": dict(r)["song_count"]} for r in rows]
 
 
 def list_albums(artist: str = None):
     conn = get_db()
     if artist:
         rows = conn.execute(
-            "SELECT DISTINCT album FROM songs WHERE artist = ? AND album != '' ORDER BY album",
+            """SELECT album, COUNT(*) as song_count 
+               FROM songs WHERE artist = ? AND album != '' AND album != 'Unknown Album' 
+               GROUP BY album ORDER BY album""",
             (artist,),
         ).fetchall()
     else:
         rows = conn.execute(
-            "SELECT DISTINCT album FROM songs WHERE album != '' ORDER BY album"
+            """SELECT album, COUNT(*) as song_count 
+               FROM songs WHERE album != '' AND album != 'Unknown Album' 
+               GROUP BY album ORDER BY album"""
         ).fetchall()
     conn.close()
-    return [dict(r)["album"] for r in rows]
+    return [{"name": dict(r)["album"], "song_count": dict(r)["song_count"]} for r in rows]
 
 
 def list_songs(artist: str = None, album: str = None):

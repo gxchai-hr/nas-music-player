@@ -82,7 +82,7 @@ const App = (() => {
         break;
       case 'directory':
         showMainApp();
-        renderDirectoryView(param || '');
+        renderDirectoryView(parts.slice(1).join('/') || '');
         break;
       default:
         showMainApp();
@@ -223,10 +223,10 @@ const App = (() => {
       </div>
       <div class="artist-grid">
         ${allArtists.map(artist => `
-          <div class="artist-card" data-artist-name="${artist}">
+          <div class="artist-card" data-artist-name="${artist.name}">
             <div class="artist-avatar">🎤</div>
-            <h3>${escapeHtml(artist || '未知')}</h3>
-            <p>${0} songs</p>
+            <h3>${escapeHtml(artist.name || '未知')}</h3>
+            <p>${artist.song_count || 0} 首</p>
           </div>
         `).join('')}
       </div>`;
@@ -319,7 +319,7 @@ const App = (() => {
       </div>
       <div class="album-grid">
         ${allAlbums.map(album => `
-          <div class="album-card" data-album-name="${album}">
+          <div class="album-card" data-album-name="${album.name}">
             <div class="album-art">
               💿
               <div class="album-play-overlay">
@@ -327,8 +327,8 @@ const App = (() => {
               </div>
             </div>
             <div class="album-info">
-              <h3>${escapeHtml(album || '未知')}</h3>
-              <p>${escapeHtml('')}</p>
+              <h3>${escapeHtml(album.name || '未知')}</h3>
+              <p>${album.song_count || 0} 首</p>
             </div>
           </div>
         `).join('')}

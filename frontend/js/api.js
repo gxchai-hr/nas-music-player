@@ -89,7 +89,8 @@ const API = (() => {
 
     // Artists
     async getArtists() {
-      const res = await request('GET', '/api/artists'); return res?.artists || [];
+      const res = await request('GET', '/api/artists');
+      return res?.artists || [];
     },
 
     async getArtist(name) {
@@ -99,7 +100,8 @@ const API = (() => {
 
     // Albums
     async getAlbums() {
-      const res = await request('GET', '/api/albums'); return res?.albums || [];
+      const res = await request('GET', '/api/albums');
+      return res?.albums || [];
     },
 
     async getAlbum(name) {
@@ -117,11 +119,13 @@ const API = (() => {
     },
 
     async getSongsByArtist(artistName) {
-      return request('GET', `/api/artists/${artistId}/songs`);
+      const res = await request('GET', `/api/artists/${encodeURIComponent(artistName)}`);
+      return res?.songs || [];
     },
 
     async getSongsByAlbum(albumName) {
-      return request('GET', `/api/albums/${albumId}/songs`);
+      const res = await request('GET', `/api/albums/${encodeURIComponent(albumName)}`);
+      return res?.songs || [];
     },
 
     // Search
