@@ -78,9 +78,21 @@ def decode_token(token: str) -> dict:
 # FastAPI dependencies
 # ---------------------------------------------------------------------------
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
-    """Extract and validate current user from Bearer token."""
-    payload = decode_token(credentials.credentials)
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request = None,
+    token: str = None,
+) -> dict:
+    """Extract and validate current user from Bearer token or query parameter."""
+    # Try Bearer token first, then query parameter
+    if credentials and credentials.credentials:
+        token_value = credentials.credentials
+    elif token:
+        token_value = token
+    else:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    payload = decode_token(token_value)
     user_id = int(payload.get("sub", 0))
     user = get_user_by_id(user_id)
     if user is None:
