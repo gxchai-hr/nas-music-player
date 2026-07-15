@@ -78,18 +78,23 @@ def decode_token(token: str) -> dict:
 # FastAPI dependencies
 # ---------------------------------------------------------------------------
 
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    request: Request = None,
+async def get_current_user(
+    request: Request,
     token: str = None,
 ) -> dict:
     """Extract and validate current user from Bearer token or query parameter."""
-    # Try Bearer token first, then query parameter
-    if credentials and credentials.credentials:
-        token_value = credentials.credentials
-    elif token:
+    token_value = None
+    
+    # Try Authorization header first
+    auth_header = request.headers.get('authorization', '')
+    if auth_header.startswith('Bearer '):
+        token_value = auth_header[7:]
+    
+    # Then try query parameter
+    if not token_value and token:
         token_value = token
-    else:
+    
+    if not token_value:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
     payload = decode_token(token_value)
