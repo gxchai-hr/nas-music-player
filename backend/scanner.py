@@ -102,36 +102,36 @@ def scan_music_directory(force_update: bool = False):
                 if ext not in AUDIO_EXTENSIONS:
                     continue
 
-            filepath = os.path.abspath(os.path.join(root, filename))
-            existing_paths.add(filepath)
+                filepath = os.path.abspath(os.path.join(root, filename))
+                existing_paths.add(filepath)
 
-            try:
-                file_size = os.path.getsize(filepath)
-            except OSError:
-                skipped += 1
-                continue
-
-            meta = _extract_metadata(filepath)
-            try:
-                # Check if song already exists and needs update
-                existing = song_exists(filepath)
-                if existing and not force_update:
-                    scanned += 1
+                try:
+                    file_size = os.path.getsize(filepath)
+                except OSError:
+                    skipped += 1
                     continue
-                
-                insert_song(
-                    title=meta["title"],
-                    artist=meta["artist"],
-                    album=meta["album"],
-                    path=filepath,
-                    duration=meta["duration"],
-                    fmt=meta["fmt"],
-                    file_size=file_size,
-                )
-                scanned += 1
-            except Exception as e:
-                logger.error("Failed to insert %s: %s", filepath, e)
-                skipped += 1
+
+                meta = _extract_metadata(filepath)
+                try:
+                    # Check if song already exists and needs update
+                    existing = song_exists(filepath)
+                    if existing and not force_update:
+                        scanned += 1
+                        continue
+
+                    insert_song(
+                        title=meta["title"],
+                        artist=meta["artist"],
+                        album=meta["album"],
+                        path=filepath,
+                        duration=meta["duration"],
+                        fmt=meta["fmt"],
+                        file_size=file_size,
+                    )
+                    scanned += 1
+                except Exception as e:
+                    logger.error("Failed to insert %s: %s", filepath, e)
+                    skipped += 1
 
     removed = remove_deleted_songs(existing_paths)
     logger.info("Scan complete: %d scanned, %d skipped, %d removed", scanned, skipped, removed)

@@ -1045,6 +1045,7 @@ input::placeholder {
   gap: 8px;
   min-width: 220px;
   justify-content: flex-end;
+  position: relative;  /* anchor for the absolutely-positioned speed dropdown */
 }
 
 .speed-btn {
