@@ -38,13 +38,7 @@ const App = (() => {
     const hash = window.location.hash.slice(1) || 'home';
     const parts = hash.split('/');
     const route = parts[0];
-    // For routes that take a single path segment (artist, album, playlist id),
-    // browser already URL-decodes window.location.hash once, but we apply
-    // decodeURIComponent defensively in case the hash was set via JS without
-    // encoding. For routes that may contain slashes (directory, search), we
-    // join remaining segments and decode.
-    const param = parts.length > 1 ? decodeURIComponent(parts[1]) : '';
-    const rest = parts.length > 1 ? decodeURIComponent(parts.slice(1).join('/')) : '';
+    const param = parts[1];
 
     currentRoute = hash;
 
@@ -84,11 +78,11 @@ const App = (() => {
         break;
       case 'search':
         showMainApp();
-        renderSearchResults(rest);
+        renderSearchResults(decodeURIComponent(parts.slice(1).join('/')));
         break;
       case 'directory':
         showMainApp();
-        renderDirectoryView(rest);
+        renderDirectoryView(parts.slice(1).join('/') || '');
         break;
       default:
         showMainApp();
@@ -229,7 +223,7 @@ const App = (() => {
       </div>
       <div class="artist-grid">
         ${allArtists.map(artist => `
-          <div class="artist-card" data-artist-name="${escapeHtml(artist.name || '')}">
+          <div class="artist-card" data-artist-name="${artist.name}">
             <div class="artist-avatar">🎤</div>
             <h3>${escapeHtml(artist.name || '未知')}</h3>
             <p>${artist.song_count || 0} 首</p>
@@ -325,7 +319,7 @@ const App = (() => {
       </div>
       <div class="album-grid">
         ${allAlbums.map(album => `
-          <div class="album-card" data-album-name="${escapeHtml(album.name || '')}">
+          <div class="album-card" data-album-name="${album.name}">
             <div class="album-art">
               💿
               <div class="album-play-overlay">
@@ -359,7 +353,7 @@ const App = (() => {
         <div class="view-header">
           <div>
             <button class="btn btn-outline" id="btn-back-albums" style="margin-bottom:12px">← Back to Albums</button>
-            <h1>${escapeHtml(displayName || '未知')}</h1>
+            <h1>${escapeHtml(album || '未知')}</h1>
             <p style="color:var(--text-secondary)">${escapeHtml('')} · ${songs.length} songs</p>
           </div>
           <div class="view-actions">
@@ -534,10 +528,7 @@ const App = (() => {
       let currentPath = '';
       for (const part of pathParts) {
         currentPath += (currentPath ? '/' : '') + part;
-        // Encode each path segment so the URL hash is valid for non-ASCII /
-        // special characters. handleRoute will decode it on the next click.
-        const encodedPath = currentPath.split('/').map(encodeURIComponent).join('/');
-        breadcrumb += ` / <a href="#directory/${encodedPath}" class="breadcrumb-link">${escapeHtml(part)}</a>`;
+        breadcrumb += ` / <a href="#directory/${currentPath}" class="breadcrumb-link">${part}</a>`;
       }
 
       // Separate directories and songs
@@ -557,11 +548,8 @@ const App = (() => {
       if (dirs.length > 0) {
         html += '<div class="directory-grid">';
         for (const dir of dirs) {
-          // Encode the sub-path so the URL hash stays valid for non-ASCII
-          // directory names; handleRoute decodes on the next click.
-          const encodedPath = dir.path.split('/').map(encodeURIComponent).join('/');
           html += `
-            <a href="#directory/${encodedPath}" class="directory-card">
+            <a href="#directory/${dir.path}" class="directory-card">
               <div class="directory-icon">📁</div>
               <div class="directory-name">${escapeHtml(dir.name)}</div>
               <div class="directory-count">${dir.song_count} 首</div>

@@ -160,16 +160,15 @@
 
       <div class="player-controls-right">
         <button id="btn-lyrics-toggle" class="btn-icon btn-sm" title="歌词">📝</button>
-        <button id="btn-speed" class="btn-icon btn-sm speed-btn" title="播放速度">1.0x
-          <div id="speed-menu" class="dropdown speed-dropdown hidden">
-            <button data-speed="0.5" class="dropdown-item">0.5x</button>
-            <button data-speed="0.75" class="dropdown-item">0.75x</button>
-            <button data-speed="1" class="dropdown-item active">1.0x</button>
-            <button data-speed="1.25" class="dropdown-item">1.25x</button>
-            <button data-speed="1.5" class="dropdown-item">1.5x</button>
-            <button data-speed="2" class="dropdown-item">2.0x</button>
-          </div>
-        </button>
+        <button id="btn-speed" class="btn-icon btn-sm speed-btn" title="播放速度">1.0x</button>
+        <div id="speed-menu" class="dropdown speed-dropdown hidden">
+          <button data-speed="0.5" class="dropdown-item">0.5x</button>
+          <button data-speed="0.75" class="dropdown-item">0.75x</button>
+          <button data-speed="1" class="dropdown-item active">1.0x</button>
+          <button data-speed="1.25" class="dropdown-item">1.25x</button>
+          <button data-speed="1.5" class="dropdown-item">1.5x</button>
+          <button data-speed="2" class="dropdown-item">2.0x</button>
+        </div>
         <div class="volume-control">
           <button id="btn-volume" class="btn-icon btn-sm" title="音量">🔊</button>
           <div class="volume-slider-container">

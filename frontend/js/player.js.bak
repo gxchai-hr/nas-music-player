@@ -272,49 +272,29 @@ const Player = (() => {
   }
 
   // ── DOM ──
-  // Use const bindings instead of a single `els` object so that a missing
-  // element in cacheDOM no longer throws inside bindEvents (which would
-  // abort every subsequent addEventListener call – e.g. an early null on
-  // btnPlay would silently kill the speed-menu click handler).
-  let btnPlay, btnPrev, btnNext, btnShuffle, btnRepeat,
-      btnVolume, volumeSlider,
-      progressBar, progressFill, progressHandle,
-      timeCurrent, timeTotal,
-      playerTitle, playerArtist, playerArt,
-      btnSpeed, speedMenu,
-      btnDownload, btnLyricsToggle, btnQueueToggle;
-
   function cacheDOM() {
-    btnPlay         = document.getElementById('btn-play');
-    btnPrev         = document.getElementById('btn-prev');
-    btnNext         = document.getElementById('btn-next');
-    btnShuffle      = document.getElementById('btn-shuffle');
-    btnRepeat       = document.getElementById('btn-repeat');
-    btnVolume       = document.getElementById('btn-volume');
-    volumeSlider    = document.getElementById('volume-slider');
-    progressBar     = document.getElementById('progress-bar');
-    progressFill    = document.getElementById('progress-fill');
-    progressHandle  = document.getElementById('progress-handle');
-    timeCurrent     = document.getElementById('time-current');
-    timeTotal       = document.getElementById('time-total');
-    playerTitle     = document.getElementById('player-song-title');
-    playerArtist    = document.getElementById('player-song-artist');
-    playerArt       = document.getElementById('player-art');
-    btnSpeed        = document.getElementById('btn-speed');
-    speedMenu       = document.getElementById('speed-menu');
-    btnDownload     = document.getElementById('btn-download');
-    btnLyricsToggle = document.getElementById('btn-lyrics-toggle');
-    btnQueueToggle  = document.getElementById('btn-queue-toggle');
-  }
-
-  // Helper to safely bind – if the element is missing we just skip rather
-  // than aborting the whole init flow.
-  function on(el, event, handler) {
-    if (el && typeof el.addEventListener === 'function') {
-      el.addEventListener(event, handler);
-      return true;
-    }
-    return false;
+    els = {
+      btnPlay: document.getElementById('btn-play'),
+      btnPrev: document.getElementById('btn-prev'),
+      btnNext: document.getElementById('btn-next'),
+      btnShuffle: document.getElementById('btn-shuffle'),
+      btnRepeat: document.getElementById('btn-repeat'),
+      btnVolume: document.getElementById('btn-volume'),
+      volumeSlider: document.getElementById('volume-slider'),
+      progressBar: document.getElementById('progress-bar'),
+      progressFill: document.getElementById('progress-fill'),
+      progressHandle: document.getElementById('progress-handle'),
+      timeCurrent: document.getElementById('time-current'),
+      timeTotal: document.getElementById('time-total'),
+      playerTitle: document.getElementById('player-song-title'),
+      playerArtist: document.getElementById('player-song-artist'),
+      playerArt: document.getElementById('player-art'),
+      btnSpeed: document.getElementById('btn-speed'),
+      speedMenu: document.getElementById('speed-menu'),
+      btnDownload: document.getElementById('btn-download'),
+      btnLyricsToggle: document.getElementById('btn-lyrics-toggle'),
+      btnQueueToggle: document.getElementById('btn-queue-toggle'),
+    };
   }
 
   // ── Format time ──
@@ -327,85 +307,81 @@ const Player = (() => {
 
   // ── Update UI ──
   function updateUI() {
-    if (!btnPlay) return;
+    if (!els.btnPlay) return;
 
     // Play/Pause button
-    btnPlay.textContent = audio.paused ? '▶' : '⏸';
+    els.btnPlay.textContent = audio.paused ? '▶' : '⏸';
 
     // Shuffle button
-    if (btnShuffle) {
-      btnShuffle.classList.toggle('active', shuffleMode);
-      btnShuffle.style.color = shuffleMode ? 'var(--accent)' : '';
+    els.btnShuffle.classList.toggle('active', shuffleMode);
+    if (shuffleMode) {
+      els.btnShuffle.style.color = 'var(--accent)';
+    } else {
+      els.btnShuffle.style.color = '';
     }
 
     // Repeat button
-    if (btnRepeat) {
-      if (repeatMode === 'off') {
-        btnRepeat.textContent = '🔁';
-        btnRepeat.style.color = '';
-      } else if (repeatMode === 'all') {
-        btnRepeat.textContent = '🔁';
-        btnRepeat.style.color = 'var(--accent)';
-      } else {
-        btnRepeat.textContent = '🔂';
-        btnRepeat.style.color = 'var(--accent)';
-      }
+    if (repeatMode === 'off') {
+      els.btnRepeat.textContent = '🔁';
+      els.btnRepeat.style.color = '';
+    } else if (repeatMode === 'all') {
+      els.btnRepeat.textContent = '🔁';
+      els.btnRepeat.style.color = 'var(--accent)';
+    } else {
+      els.btnRepeat.textContent = '🔂';
+      els.btnRepeat.style.color = 'var(--accent)';
     }
   }
 
   function updateProgressUI() {
-    if (!progressFill) return;
+    if (!els.progressFill) return;
 
     const current = audio.currentTime || 0;
     const duration = audio.duration || 0;
     const pct = duration ? (current / duration) * 100 : 0;
 
-    progressFill.style.width = `${pct}%`;
-    if (progressHandle) progressHandle.style.left = `${pct}%`;
-    if (timeCurrent) timeCurrent.textContent = formatTime(current);
-    if (timeTotal) timeTotal.textContent = formatTime(duration);
+    els.progressFill.style.width = `${pct}%`;
+    els.progressHandle.style.left = `${pct}%`;
+    els.timeCurrent.textContent = formatTime(current);
+    els.timeTotal.textContent = formatTime(duration);
   }
 
   function updateVolumeUI() {
-    if (volumeSlider) {
-      volumeSlider.value = Math.round(audio.volume * 100);
+    if (els.volumeSlider) {
+      els.volumeSlider.value = Math.round(audio.volume * 100);
     }
-    if (btnVolume) {
+    if (els.btnVolume) {
       if (audio.volume === 0) {
-        btnVolume.textContent = '🔇';
+        els.btnVolume.textContent = '🔇';
       } else if (audio.volume < 0.5) {
-        btnVolume.textContent = '🔉';
+        els.btnVolume.textContent = '🔉';
       } else {
-        btnVolume.textContent = '🔊';
+        els.btnVolume.textContent = '🔊';
       }
     }
   }
 
   function updateSpeedUI() {
-    if (btnSpeed) {
-      btnSpeed.textContent = `${audio.playbackRate}x`;
+    if (els.btnSpeed) {
+      els.btnSpeed.textContent = `${audio.playbackRate}x`;
     }
     // Update speed menu active item
-    if (speedMenu) {
-      const items = speedMenu.querySelectorAll('.dropdown-item');
-      items.forEach(item => {
-        item.classList.toggle('active', parseFloat(item.dataset.speed) === audio.playbackRate);
-      });
-    }
+    const items = els.speedMenu ? els.speedMenu.querySelectorAll('.dropdown-item') : [];
+    items.forEach(item => {
+      item.classList.toggle('active', parseFloat(item.dataset.speed) === audio.playbackRate);
+    });
   }
 
   function updateSongInfoUI(song) {
     if (!song) return;
-    if (playerTitle) playerTitle.textContent = song.title || 'Unknown';
-    if (playerArtist) playerArtist.textContent = song.artist || 'Unknown Artist';
+    els.playerTitle.textContent = song.title || 'Unknown';
+    els.playerArtist.textContent = song.artist || 'Unknown Artist';
 
     // Album art placeholder
-    if (playerArt) {
-      if (song.album_art) {
-        playerArt.innerHTML = `<img src="${song.album_art}" alt="Album Art" onerror="this.parentElement.innerHTML='<span>🎵</span>'">`;
-      } else {
-        playerArt.innerHTML = '<span>🎵</span>';
-      }
+    if (song.album_art) {
+      els.playerArt.innerHTML = `<img src="${song.album_art}" alt="Album Art" onerror="this.parentElement.innerHTML='<span>🎵</span>'">`;
+    } else {
+      els.playerArt.innerHTML = '<span>🎵</span>';
     }
 
     // Update page title
@@ -415,38 +391,38 @@ const Player = (() => {
   // ── Event Bindings ──
   function bindEvents() {
     // Play / Pause
-    on(btnPlay, 'click', togglePlay);
-    on(btnPrev, 'click', playPrev);
-    on(btnNext, 'click', playNext);
+    els.btnPlay.addEventListener('click', togglePlay);
+    els.btnPrev.addEventListener('click', playPrev);
+    els.btnNext.addEventListener('click', playNext);
 
     // Shuffle / Repeat
-    on(btnShuffle, 'click', toggleShuffle);
-    on(btnRepeat, 'click', toggleRepeat);
+    els.btnShuffle.addEventListener('click', toggleShuffle);
+    els.btnRepeat.addEventListener('click', toggleRepeat);
 
     // Volume
-    on(btnVolume, 'click', toggleMute);
-    on(volumeSlider, 'input', (e) => {
+    els.btnVolume.addEventListener('click', toggleMute);
+    els.volumeSlider.addEventListener('input', (e) => {
       setVolume(parseInt(e.target.value, 10) / 100);
     });
 
     // Progress bar seeking
-    on(progressBar, 'click', (e) => {
-      const rect = progressBar.getBoundingClientRect();
+    els.progressBar.addEventListener('click', (e) => {
+      const rect = els.progressBar.getBoundingClientRect();
       const pct = ((e.clientX - rect.left) / rect.width) * 100;
       seekPercent(pct);
     });
 
     // Progress bar dragging
     let isDragging = false;
-    on(progressBar, 'mousedown', (e) => {
+    els.progressBar.addEventListener('mousedown', (e) => {
       isDragging = true;
-      const rect = progressBar.getBoundingClientRect();
+      const rect = els.progressBar.getBoundingClientRect();
       const pct = ((e.clientX - rect.left) / rect.width) * 100;
       seekPercent(pct);
     });
     document.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
-      const rect = progressBar.getBoundingClientRect();
+      const rect = els.progressBar.getBoundingClientRect();
       const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
       seekPercent(pct);
     });
@@ -455,32 +431,29 @@ const Player = (() => {
     });
 
     // Speed menu
-    on(btnSpeed, 'click', (e) => {
+    els.btnSpeed.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (speedMenu) speedMenu.classList.toggle('hidden');
+      els.speedMenu.classList.toggle('hidden');
     });
 
-    if (speedMenu) {
-      speedMenu.querySelectorAll('.dropdown-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const speed = parseFloat(item.dataset.speed);
-          setSpeed(speed);
-          speedMenu.classList.add('hidden');
-        });
+    els.speedMenu.querySelectorAll('.dropdown-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const speed = parseFloat(item.dataset.speed);
+        setSpeed(speed);
+        els.speedMenu.classList.add('hidden');
       });
-    }
+    });
 
     // Close speed menu on outside click
     document.addEventListener('click', (e) => {
-      if (!speedMenu) return;
-      if (!speedMenu.contains(e.target) && e.target !== btnSpeed) {
-        speedMenu.classList.add('hidden');
+      if (!els.speedMenu.contains(e.target) && e.target !== els.btnSpeed) {
+        els.speedMenu.classList.add('hidden');
       }
     });
 
     // Download
-    on(btnDownload, 'click', () => {
+    els.btnDownload.addEventListener('click', () => {
       if (queueIndex >= 0 && queue[queueIndex]) {
         const song = queue[queueIndex];
         if (typeof App !== 'undefined' && App.handleDownload) {
@@ -493,23 +466,22 @@ const Player = (() => {
     });
 
     // Queue toggle
-    on(btnQueueToggle, 'click', () => {
+    els.btnQueueToggle.addEventListener('click', () => {
       const panel = document.getElementById('queue-panel');
       const lyricsPanel = document.getElementById('lyrics-panel');
       if (lyricsPanel && !lyricsPanel.classList.contains('hidden')) {
         lyricsPanel.classList.add('hidden');
       }
-      if (panel) panel.classList.toggle('hidden');
+      panel.classList.toggle('hidden');
     });
 
     // Lyrics toggle
-    on(btnLyricsToggle, 'click', () => {
+    els.btnLyricsToggle.addEventListener('click', () => {
       const panel = document.getElementById('lyrics-panel');
       const queuePanel = document.getElementById('queue-panel');
       if (queuePanel && !queuePanel.classList.contains('hidden')) {
         queuePanel.classList.add('hidden');
       }
-      if (!panel) return;
       panel.classList.toggle('hidden');
       // Load lyrics for current song if panel opened
       if (!panel.classList.contains('hidden') && queueIndex >= 0 && queue[queueIndex]) {
