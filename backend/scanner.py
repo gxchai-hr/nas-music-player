@@ -19,7 +19,7 @@ from mutagen.oggopus import OggOpus
 from mutagen.wave import WAVE
 
 import config
-from models import insert_song, remove_deleted_songs, get_db
+from models import insert_song, remove_deleted_songs, get_db, song_exists
 
 logger = logging.getLogger("scanner")
 
