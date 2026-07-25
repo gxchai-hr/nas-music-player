@@ -1875,7 +1875,7 @@ input::placeholder {
    ============================================= */
 @media (orientation: landscape) and (max-height: 500px) {
   :root {
-    --player-height: 64px;
+    --player-height: 110px;  /* 28(进度条) + 4(gap) + 36(按钮) + 8x2(padding) ≈ 110px */
   }
 
   #app-page.active {
@@ -1941,18 +1941,18 @@ input::placeholder {
     margin: 0;
   }
   .player-buttons {
-    gap: 6px;
+    gap: 10px;
   }
   .player-buttons .btn-icon {
     font-size: 18px;
-    padding: 6px;
-    min-width: 36px;
-    min-height: 36px;
+    padding: 8px;
+    min-width: 40px;
+    min-height: 40px;
   }
   .btn-play {
-    width: 40px;
-    height: 40px;
-    font-size: 16px;
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
   }
 
   /* Right side: hide non-essentials to save horizontal space. */
@@ -1963,9 +1963,9 @@ input::placeholder {
   }
   .player-controls-right .btn-icon {
     font-size: 18px;
-    padding: 6px;
-    min-width: 36px;
-    min-height: 36px;
+    padding: 8px;
+    min-width: 40px;
+    min-height: 40px;
   }
   .player-controls-right #btn-lyrics-toggle,
   .player-controls-right #btn-speed,
