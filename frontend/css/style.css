@@ -879,18 +879,29 @@ input::placeholder {
   display: flex;
   flex-direction: column;       /* fix: progress-row + bar-row 上下堆叠 */
   align-items: stretch;
-  padding: 0 16px;
+  padding: 8px 16px;
   gap: 6px;
   z-index: 100;
   min-height: var(--player-height);
+}
+
+/* v1.0.6.4: 桌面端按钮行布局——三列：曲目信息 | 中央按钮 | 右侧控件 */
+.player-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .player-track-info {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 220px;
+  min-width: 180px;
   max-width: 280px;
+  flex: 0 0 auto;
 }
 
 .player-art {
@@ -946,6 +957,7 @@ input::placeholder {
   justify-content: center;
   max-width: 600px;
   margin: 0 auto;
+  min-width: 0;
 }
 
 .player-buttons {
@@ -1048,10 +1060,16 @@ input::placeholder {
 .player-controls-right {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-width: 220px;
+  gap: 6px;
+  min-width: 0;
   justify-content: flex-end;
   position: relative;  /* anchor for the absolutely-positioned speed dropdown */
+  flex: 0 0 auto;
+}
+
+.player-controls-right .btn-icon {
+  min-width: 36px;
+  padding: 6px 8px;
 }
 
 .speed-btn {
