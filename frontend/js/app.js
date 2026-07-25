@@ -829,7 +829,10 @@ const App = (() => {
             <div class="user-name">${escapeHtml(u.username)}</div>
             <div class="user-role">${u.role || 'user'}</div>
           </div>
-          ${u.username !== 'admin' ? `<button class="btn btn-sm btn-outline btn-danger" data-user-id="${u.id}">删除</button>` : ''}
+          ${u.username !== 'admin' ? `
+            <button class="btn btn-sm btn-outline btn-assign-dirs" data-user-id="${u.id}" data-username="${escapeHtml(u.username)}" title="分配目录">📁 分配目录</button>
+            <button class="btn btn-sm btn-outline btn-danger" data-user-id="${u.id}">删除</button>
+          ` : '<span style="font-size:11px;color:var(--text-muted)">默认全部</span>'}
         </div>
       `).join('');
 
@@ -846,8 +849,99 @@ const App = (() => {
           }
         });
       });
+
+      list.querySelectorAll('.btn-assign-dirs').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const userId = btn.dataset.userId;
+          const username = btn.dataset.username;
+          showAssignDirsModal(userId, username);
+        });
+      });
     } catch (e) {
       list.innerHTML = `<p style="color:var(--danger);padding:12px">${e.message}</p>`;
+    }
+  }
+
+  // ── v1.0.6: Assign Directories Modal ──
+  let _assignDirsState = { userId: null, allDirs: [], selected: new Set(), selectAll: false };
+
+  async function showAssignDirsModal(userId, username) {
+    _assignDirsState.userId = userId;
+    _assignDirsState.selected = new Set();
+    _assignDirsState.selectAll = false;
+
+    $('#assign-dirs-title').textContent = `📁 分配目录 — ${username}`;
+    const modal = $('#modal-assign-dirs');
+    modal.classList.remove('hidden');
+
+    const list = $('#assign-dir-list');
+    list.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+    try {
+      const [allDirs, currentRes] = await Promise.all([
+        API.getAllDirectories(),
+        API.getUserDirectories(userId),
+      ]);
+      _assignDirsState.allDirs = allDirs;
+      const current = currentRes?.directories || [];
+
+      // "全部" checkbox
+      if (current.includes('')) {
+        _assignDirsState.selectAll = true;
+        $('#assign-dir-all').checked = true;
+      } else {
+        $('#assign-dir-all').checked = false;
+        current.forEach(d => _assignDirsState.selected.add(d));
+      }
+
+      renderAssignDirList();
+    } catch (e) {
+      list.innerHTML = `<p style="color:var(--danger);padding:12px">${e.message}</p>`;
+    }
+  }
+
+  function renderAssignDirList() {
+    const list = $('#assign-dir-list');
+    const dirs = _assignDirsState.allDirs;
+    if (!dirs.length) {
+      list.innerHTML = '<p style="color:var(--text-muted);padding:12px">音乐库为空，请先扫描。</p>';
+      return;
+    }
+    list.innerHTML = dirs.map(d => `
+      <label class="checkbox-row">
+        <input type="checkbox" data-dir="${escapeHtml(d)}" ${_assignDirsState.selected.has(d) ? 'checked' : ''}>
+        <span>${escapeHtml(d)}</span>
+      </label>
+    `).join('');
+
+    list.querySelectorAll('input[type=checkbox]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const d = cb.dataset.dir;
+        if (cb.checked) _assignDirsState.selected.add(d);
+        else _assignDirsState.selected.delete(d);
+      });
+    });
+  }
+
+  async function saveAssignDirs() {
+    const userId = _assignDirsState.userId;
+    if (!userId) return;
+    const selectAll = $('#assign-dir-all').checked;
+    let directories;
+    if (selectAll) {
+      directories = [''];
+    } else {
+      directories = Array.from(_assignDirsState.selected);
+      if (directories.length === 0) {
+        if (!confirm('该用户将无法访问任何音乐。确认保存？')) return;
+      }
+    }
+    try {
+      await API.updateUserDirectories(userId, directories);
+      toast('目录已保存', 'success');
+      $('#modal-assign-dirs').classList.add('hidden');
+    } catch (e) {
+      toast('保存失败: ' + e.message, 'error');
     }
   }
 
@@ -987,6 +1081,7 @@ const App = (() => {
       try {
         await API.login(username, password);
         errorEl.classList.add('hidden');
+        applyRoleVisibility(); // v1.0.6.2: show/hide admin buttons
         await loadAppData();
         navigateTo('home');
       } catch (err) {
@@ -1089,9 +1184,20 @@ const App = (() => {
     $('#btn-logout').addEventListener('click', (e) => {
       e.preventDefault();
       API.clearToken();
+      API.clearSession();
+      applyRoleVisibility();
       navigateTo('login');
       toast('Logged out', 'success');
     });
+
+    // v1.0.6.2: hide admin-only buttons for non-admin users
+    function applyRoleVisibility() {
+      const isAdmin = API.isAdmin();
+      document.querySelectorAll('[data-admin-only]').forEach(el => {
+        el.style.display = isAdmin ? '' : 'none';
+      });
+    }
+    applyRoleVisibility(); // run on page load
 
     // Admin users
     $('#btn-admin-users').addEventListener('click', (e) => {
@@ -1120,6 +1226,21 @@ const App = (() => {
       } catch (e) {
         toast('失败: ' + e.message, 'error');
       }
+    });
+
+    // v1.0.6: Save directory assignments
+    $('#btn-save-dirs').addEventListener('click', saveAssignDirs);
+
+    // v1.0.6: "全部" checkbox toggles individual checkboxes
+    $('#assign-dir-all').addEventListener('change', (e) => {
+      const isAll = e.target.checked;
+      const list = $('#assign-dir-list');
+      list.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        cb.disabled = isAll;
+        if (isAll) {
+          cb.checked = false;
+        }
+      });
     });
 
     // ── Mobile Menu ──

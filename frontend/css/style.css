@@ -336,6 +336,7 @@ input::placeholder {
   grid-template-areas:
     "sidebar main"
     "player player";
+  transition: grid-template-rows 0.2s ease;
 }
 
 /* ── Sidebar ── */
@@ -876,10 +877,12 @@ input::placeholder {
   background: var(--bg-player);
   border-top: 1px solid var(--border);
   display: flex;
-  align-items: center;
+  flex-direction: column;       /* fix: progress-row + bar-row 上下堆叠 */
+  align-items: stretch;
   padding: 0 16px;
-  gap: 16px;
+  gap: 6px;
   z-index: 100;
+  min-height: var(--player-height);
 }
 
 .player-track-info {
@@ -940,7 +943,7 @@ input::placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
   max-width: 600px;
   margin: 0 auto;
 }
@@ -975,14 +978,15 @@ input::placeholder {
 .player-progress {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
+  padding: 4px 0;
 }
 
 .time-display {
-  font-size: 11px;
-  color: var(--text-muted);
-  min-width: 36px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-width: 42px;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
@@ -990,25 +994,27 @@ input::placeholder {
 /* Progress bar */
 .progress-bar-container {
   flex: 1;
-  height: 24px;
+  height: 28px;                 /* 加大可点击区域，方便拖动 */
   display: flex;
   align-items: center;
   cursor: pointer;
   position: relative;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .progress-bar-bg {
   width: 100%;
-  height: 4px;
+  height: 6px;                  /* 默认稍粗一些 */
   background: var(--bg-hover-strong);
-  border-radius: 2px;
+  border-radius: 3px;
   position: relative;
   overflow: visible;
   transition: height 0.15s;
 }
 
 .progress-bar-container:hover .progress-bar-bg {
-  height: 6px;
+  height: 8px;
 }
 
 .progress-bar-fill {
@@ -1380,7 +1386,7 @@ input::placeholder {
 .admin-user-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 8px 0;
   border-bottom: 1px solid var(--border);
 }
@@ -1391,6 +1397,7 @@ input::placeholder {
 
 .admin-user-item .user-info {
   flex: 1;
+  min-width: 0;
 }
 
 .admin-user-item .user-info .user-name {
@@ -1400,6 +1407,60 @@ input::placeholder {
 .admin-user-item .user-info .user-role {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+.admin-user-item .btn-assign-dirs {
+  font-size: 12px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+/* v1.0.6: Assign directories modal */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background var(--transition);
+  user-select: none;
+}
+
+.checkbox-row:hover {
+  background: var(--bg-hover);
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.checkbox-row input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.checkbox-row input[type="checkbox"]:disabled + span {
+  opacity: 0.5;
+}
+
+.checkbox-row span {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.assign-dir-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px;
 }
 
 /* Download info */
@@ -1467,6 +1528,11 @@ input::placeholder {
 @media (max-width: 768px) {
   #app-page.active {
     grid-template-columns: 1fr;
+    grid-template-rows: 1fr var(--player-height);
+  }
+
+  :root {
+    --player-height: 120px;
   }
 
   .sidebar {
@@ -1511,13 +1577,63 @@ input::placeholder {
     opacity: 1;
   }
 
+  /* ── Mobile player bar (v1.0.6: enlarged touch targets) ── */
+  .player-bar {
+    padding: 6px 10px 8px;
+    gap: 6px;
+  }
+
+  .player-bar-row {
+    gap: 8px;
+  }
+
   .player-track-info {
     min-width: 0;
-    max-width: 140px;
+    flex: 1;
+    max-width: none;
+  }
+
+  .player-track-info .player-art {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+
+  .player-controls-center {
+    flex: 0 0 auto;
+    max-width: none;
+    margin: 0;
+  }
+
+  .player-buttons {
+    gap: 10px;
+  }
+
+  /* 触摸目标加大到 44px (iOS HIG 最小) */
+  .player-buttons .btn-icon {
+    font-size: 22px;
+    padding: 10px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .btn-play {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
   }
 
   .player-controls-right {
     min-width: auto;
+    flex: 0 0 auto;
+    gap: 4px;
+  }
+
+  .player-controls-right .btn-icon {
+    font-size: 20px;
+    padding: 8px;
+    min-width: 40px;
+    min-height: 40px;
   }
 
   .volume-control {
@@ -1539,17 +1655,27 @@ input::placeholder {
 
 @media (max-width: 480px) {
   .player-bar {
-    padding: 0 8px;
-    gap: 8px;
+    padding: 4px 6px 6px;
+    gap: 4px;
   }
 
-  .player-buttons {
-    gap: 8px;
+  .player-progress-row {
+    height: 20px;
   }
 
-  .btn-play {
-    width: 36px;
-    height: 36px;
+  .player-track-info .player-meta {
+    min-width: 0;
+  }
+
+  .player-track-info .player-song-title,
+  .player-track-info .player-song-artist {
+    max-width: 100px;
+  }
+
+  /* Very narrow: hide some non-essential right controls */
+  .player-controls-right #btn-lyrics-toggle,
+  .player-controls-right #btn-download {
+    display: none;
   }
 
   .view-container {
@@ -1718,4 +1844,126 @@ input::placeholder {
 .speed-dropdown .dropdown-item.active {
   color: var(--accent);
   font-weight: 600;
+}
+
+/* =============================================
+   LANDSCAPE PHONE  (v1.0.6.3)
+   In landscape on phones the viewport is short
+   (height ≈ 375–414px) and the previous grid
+   footer + 120px player bar pushed controls out
+   of the visible area. Pin the player to the
+   bottom with position:fixed and shrink the
+   right-hand controls to the bare essentials.
+   ============================================= */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root {
+    --player-height: 64px;
+  }
+
+  #app-page.active {
+    /* Drop the grid footer; main content fills the viewport. */
+    display: block;
+  }
+
+  .main-content {
+    height: calc(100vh - var(--player-height));
+    padding-top: 0;
+  }
+
+  .mobile-menu-btn {
+    top: 8px;
+    font-size: 20px;
+  }
+
+  /* Pin player bar to the bottom edge. */
+  .player-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    padding: 4px 12px;
+    gap: 8px;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 12px var(--shadow);
+  }
+
+  .player-progress-row {
+    height: 20px;
+    margin-bottom: 2px;
+  }
+
+  .player-bar-row {
+    gap: 10px;
+  }
+
+  /* Compact track info on the left. */
+  .player-track-info {
+    min-width: 0;
+    flex: 1 1 auto;
+    max-width: none;
+    gap: 8px;
+  }
+  .player-track-info .player-art {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+  .player-track-info .player-meta { min-width: 0; }
+  .player-track-info .player-song-title,
+  .player-track-info .player-song-artist {
+    font-size: 12px;
+    max-width: 160px;
+  }
+
+  /* Center playback controls – keep only prev/play/next + shuffle/repeat. */
+  .player-controls-center {
+    flex: 0 0 auto;
+    max-width: none;
+    margin: 0;
+  }
+  .player-buttons {
+    gap: 6px;
+  }
+  .player-buttons .btn-icon {
+    font-size: 18px;
+    padding: 6px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+  .btn-play {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  /* Right side: hide non-essentials to save horizontal space. */
+  .player-controls-right {
+    min-width: auto;
+    flex: 0 0 auto;
+    gap: 4px;
+  }
+  .player-controls-right .btn-icon {
+    font-size: 18px;
+    padding: 6px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+  .player-controls-right #btn-lyrics-toggle,
+  .player-controls-right #btn-speed,
+  .player-controls-right #btn-download,
+  .player-controls-right #btn-queue-toggle,
+  .player-controls-right .volume-control {
+    display: none;
+  }
+
+  /* Make sure the lyrics panel does not overlap the player when pinned. */
+  .lyrics-panel {
+    bottom: var(--player-height);
+  }
+
+  /* Toast sits above the pinned bar. */
+  .toast {
+    bottom: calc(var(--player-height) + 12px);
+  }
 }

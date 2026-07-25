@@ -23,6 +23,8 @@ from models import (
     create_playlist, get_user_playlists, add_to_playlist, remove_from_playlist,
     delete_playlist, playlist_exists,
     get_directory_structure, get_songs_by_directory,
+    get_user_directories, set_user_directories,
+    list_all_directory_paths,
 )
 from auth import (
     hash_password, verify_password, create_token,
@@ -33,6 +35,51 @@ from lyrics import get_lyrics
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("app")
+
+
+# ---------------------------------------------------------------------------
+# v1.0.6: per-user directory permission helpers
+# ---------------------------------------------------------------------------
+
+def _user_dir_paths(user: dict):
+    """Return the list of dir_paths the user is allowed to see.
+
+    Returns None for admins (no filter), [] for users with no perms (sees
+    nothing), or a list of relative sub-paths otherwise.
+    """
+    if user.get("role") == "admin":
+        return None
+    return get_user_directories(user["id"])
+
+
+def _user_can_access_song(user: dict, song: dict) -> bool:
+    """Check whether the given user is allowed to access the given song.
+
+    Admins can access everything. Regular users can only access songs whose
+    file path falls under one of their allowed directory paths.
+
+    v1.0.6.3: song.path is absolute (e.g. /music/10.钱儿爸/01.mp3) while
+    the allowed directory names are relative (e.g. "10.钱儿爸"), so a plain
+    startswith() always fails. Use substring match like models._allowed
+    so /api/stream returns 200 instead of 403 for valid assignments.
+    """
+    if user.get("role") == "admin":
+        return True
+    allowed = get_user_directories(user["id"])
+    if not allowed:
+        return False
+    song_path = song.get("path", "").replace("\\", "/")
+    for d in allowed:
+        d_norm = d.replace("\\", "/").strip("/")
+        if not d_norm:
+            return True  # root grant
+        # Match if the directory name appears as a sub-path anywhere in
+        # the absolute file path: e.g. "/music/10.钱儿爸/01.mp3" matches
+        # both "/10.钱儿爸/" (songs in subfolders) and trailing "/10.钱儿爸"
+        # (the directory itself, for an audio file named like the dir).
+        if (os.sep + d_norm + os.sep) in song_path or song_path.endswith(os.sep + d_norm):
+            return True
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -113,6 +160,11 @@ class ThemeRequest(BaseModel):
     theme: str
 
 
+class UpdateUserDirectoriesRequest(BaseModel):
+    """v1.0.6: body for PUT /api/users/{user_id}/directories."""
+    directories: list = []
+
+
 # ---------------------------------------------------------------------------
 # Auth endpoints
 # ---------------------------------------------------------------------------
@@ -149,7 +201,7 @@ def get_profile(user: dict = Depends(get_current_user)):
 
 @app.get("/api/artists")
 def get_artists(user: dict = Depends(get_current_user)):
-    return {"artists": list_artists()}
+    return {"artists": list_artists(dir_paths=_user_dir_paths(user))}
 
 
 @app.get("/api/albums")
@@ -157,7 +209,7 @@ def get_albums(
     artist: Optional[str] = Query(None),
     user: dict = Depends(get_current_user),
 ):
-    return {"albums": list_albums(artist=artist)}
+    return {"albums": list_albums(artist=artist, dir_paths=_user_dir_paths(user))}
 
 
 @app.get("/api/songs")
@@ -166,7 +218,7 @@ def get_songs(
     album: Optional[str] = Query(None),
     user: dict = Depends(get_current_user),
 ):
-    return {"songs": list_songs(artist=artist, album=album)}
+    return {"songs": list_songs(artist=artist, album=album, dir_paths=_user_dir_paths(user))}
 
 
 @app.get("/api/search")
@@ -174,7 +226,7 @@ def search(
     q: str = Query(..., min_length=1),
     user: dict = Depends(get_current_user),
 ):
-    return {"songs": search_songs(q)}
+    return {"songs": search_songs(q, dir_paths=_user_dir_paths(user))}
 
 
 @app.get("/api/directory")
@@ -183,7 +235,7 @@ def get_directory(
     user: dict = Depends(get_current_user),
 ):
     """Get directory structure for browsing."""
-    items = get_directory_structure(subpath=path)
+    items = get_directory_structure(subpath=path, dir_paths=_user_dir_paths(user))
     return {"items": items, "path": path}
 
 
@@ -193,19 +245,19 @@ def get_directory_songs(
     user: dict = Depends(get_current_user),
 ):
     """Get all songs in a directory."""
-    songs = get_songs_by_directory(subpath=path)
+    songs = get_songs_by_directory(subpath=path, dir_paths=_user_dir_paths(user))
     return {"songs": songs}
 
 
 @app.get("/api/artists/{artist_name}")
 def get_artist(artist_name: str, user: dict = Depends(get_current_user)):
-    songs = list_songs(artist=artist_name)
+    songs = list_songs(artist=artist_name, dir_paths=_user_dir_paths(user))
     return {"name": artist_name, "songs": songs}
 
 
 @app.get("/api/albums/{album_name}")
 def get_album(album_name: str, user: dict = Depends(get_current_user)):
-    songs = list_songs(album=album_name)
+    songs = list_songs(album=album_name, dir_paths=_user_dir_paths(user))
     return {"name": album_name, "songs": songs}
 
 
@@ -214,6 +266,8 @@ def get_song(song_id: int, user: dict = Depends(get_current_user)):
     song = get_song_by_id(song_id)
     if not song:
         raise HTTPException(status_code=404, detail="Song not found")
+    if not _user_can_access_song(user, song):
+        raise HTTPException(status_code=403, detail="Access denied")
     return song
 
 
@@ -226,6 +280,8 @@ def stream_song(song_id: int, request: Request, user: dict = Depends(get_current
     song = get_song_by_id(song_id)
     if not song:
         raise HTTPException(status_code=404, detail="Song not found")
+    if not _user_can_access_song(user, song):
+        raise HTTPException(status_code=403, detail="Access denied")
 
     file_path = song["path"]
     if not os.path.isfile(file_path):
@@ -250,6 +306,8 @@ def download_song(song_id: int, user: dict = Depends(get_current_user)):
     song = get_song_by_id(song_id)
     if not song:
         raise HTTPException(status_code=404, detail="Song not found")
+    if not _user_can_access_song(user, song):
+        raise HTTPException(status_code=403, detail="Access denied")
 
     file_path = song["path"]
     if not os.path.isfile(file_path):
@@ -438,6 +496,8 @@ def create_user_endpoint(
     user = create_user(req.username.strip(), hash_password(req.password), req.role)
     if user is None:
         raise HTTPException(status_code=409, detail="Username already exists")
+    # v1.0.6: new user is created with NO directory access. Admin must
+    # explicitly assign directories via /api/users/{id}/directories.
     user.pop("password_hash", None)
     return user
 
@@ -454,6 +514,67 @@ def delete_user_endpoint(
         raise HTTPException(status_code=400, detail="Cannot delete the default admin user")
     delete_user(user_id)
     return {"message": "User deleted"}
+
+
+# ---------------------------------------------------------------------------
+# v1.0.6: User directory permissions
+# ---------------------------------------------------------------------------
+
+@app.get("/api/users/{user_id}/directories")
+def get_user_directories_endpoint(
+    user_id: int,
+    admin: dict = Depends(require_admin),
+):
+    """Return the list of directory paths assigned to a user."""
+    target = get_user_by_id(user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "user_id": user_id,
+        "username": target["username"],
+        "role": target["role"],
+        "directories": get_user_directories(user_id),
+    }
+
+
+@app.get("/api/directories")
+def list_directories_endpoint(admin: dict = Depends(require_admin)):
+    """Return all top-level directory names found in the library (for the
+    admin UI to present checkboxes)."""
+    return {"directories": list_all_directory_paths()}
+
+
+@app.put("/api/users/{user_id}/directories")
+def update_user_directories_endpoint(
+    user_id: int,
+    req: UpdateUserDirectoriesRequest,
+    admin: dict = Depends(require_admin),
+):
+    """Replace the user's full set of allowed directory paths.
+
+    Pass an empty list to deny access to everything (the default for new
+    users). Pass a single "" entry to grant access to the entire library.
+    Pass a list of sub-paths (e.g. ["10.钱儿爸", "摇滚"]) to grant access
+    to those specific directories.
+    """
+    target = get_user_by_id(user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not isinstance(req.directories, list):
+        raise HTTPException(status_code=400, detail="directories must be a list")
+    if len(req.directories) > 500:
+        raise HTTPException(status_code=400, detail="Too many directories (max 500)")
+    for d in req.directories:
+        if not isinstance(d, str):
+            raise HTTPException(status_code=400, detail="Each directory must be a string")
+        if len(d) > 500 or "\x00" in d:
+            raise HTTPException(status_code=400, detail="Invalid directory name")
+    set_user_directories(user_id, req.directories)
+    return {
+        "message": "Directories updated",
+        "user_id": user_id,
+        "directories": get_user_directories(user_id),
+    }
 
 
 # ---------------------------------------------------------------------------

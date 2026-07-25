@@ -80,10 +80,10 @@
       </div>
 
       <div class="sidebar-footer">
-        <button id="btn-scan" class="btn btn-sm btn-outline" title="扫描音乐库">
+        <button id="btn-scan" class="btn btn-sm btn-outline" title="扫描音乐库" data-admin-only>
           🔄 扫描音乐库
         </button>
-        <button id="btn-scan-force" class="btn btn-sm btn-outline" title="强制重新扫描（更新元数据）">
+        <button id="btn-scan-force" class="btn btn-sm btn-outline" title="强制重新扫描（更新元数据）" data-admin-only>
           🔃 强制扫描
         </button>
         <button id="btn-theme-toggle" class="btn-icon" title="切换主题">
@@ -94,7 +94,7 @@
             👤 <span id="current-username">用户</span>
           </button>
           <div id="user-dropdown" class="dropdown hidden">
-            <a href="#" id="btn-admin-users" class="dropdown-item">👥 管理用户</a>
+            <a href="#" id="btn-admin-users" class="dropdown-item" data-admin-only>👥 管理用户</a>
             <a href="#" id="btn-logout" class="dropdown-item">🚪 退出登录</a>
           </div>
         </div>
@@ -127,56 +127,60 @@
 
     <!-- 底部播放栏 -->
     <footer id="player-bar" class="player-bar">
-      <div class="player-track-info">
-        <div class="player-art" id="player-art">
-          <span>🎵</span>
+      <!-- 进度条独立一行（桌面端 + 移动端都是） -->
+      <div class="player-progress-row">
+        <span id="time-current" class="time-display">0:00</span>
+        <div class="progress-bar-container" id="progress-bar">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+            <div class="progress-bar-handle" id="progress-handle"></div>
+          </div>
         </div>
-        <div class="player-meta">
-          <div class="player-song-title" id="player-song-title">未选择歌曲</div>
-          <div class="player-song-artist" id="player-song-artist">—</div>
-        </div>
-        <button id="btn-toggle-fav" class="btn-icon btn-fav" title="收藏">♡</button>
+        <span id="time-total" class="time-display">0:00</span>
       </div>
 
-      <div class="player-controls-center">
-        <div class="player-buttons">
-          <button id="btn-shuffle" class="btn-icon btn-sm" title="随机播放">🔀</button>
-          <button id="btn-prev" class="btn-icon" title="上一首">⏮</button>
-          <button id="btn-play" class="btn-play" title="播放">▶</button>
-          <button id="btn-next" class="btn-icon" title="下一首">⏭</button>
-          <button id="btn-repeat" class="btn-icon btn-sm" title="循环播放">🔁</button>
+      <div class="player-bar-row">
+        <div class="player-track-info">
+          <div class="player-art" id="player-art">
+            <span>🎵</span>
+          </div>
+          <div class="player-meta">
+            <div class="player-song-title" id="player-song-title">未选择歌曲</div>
+            <div class="player-song-artist" id="player-song-artist">—</div>
+          </div>
+          <button id="btn-toggle-fav" class="btn-icon btn-fav" title="收藏">♡</button>
         </div>
-        <div class="player-progress">
-          <span id="time-current" class="time-display">0:00</span>
-          <div class="progress-bar-container" id="progress-bar">
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill" id="progress-fill"></div>
-              <div class="progress-bar-handle" id="progress-handle"></div>
+
+        <div class="player-controls-center">
+          <div class="player-buttons">
+            <button id="btn-shuffle" class="btn-icon btn-sm" title="随机播放">🔀</button>
+            <button id="btn-prev" class="btn-icon" title="上一首 (←)">⏮</button>
+            <button id="btn-play" class="btn-play" title="播放 (空格)">▶</button>
+            <button id="btn-next" class="btn-icon" title="下一首 (→)">⏭</button>
+            <button id="btn-repeat" class="btn-icon btn-sm" title="循环播放">🔁</button>
+          </div>
+        </div>
+
+        <div class="player-controls-right">
+          <button id="btn-lyrics-toggle" class="btn-icon btn-sm" title="歌词">📝</button>
+          <button id="btn-speed" class="btn-icon btn-sm speed-btn" title="播放速度">1.0x</button>
+          <div id="speed-menu" class="dropdown speed-dropdown hidden">
+            <button data-speed="0.5" class="dropdown-item">0.5x</button>
+            <button data-speed="0.75" class="dropdown-item">0.75x</button>
+            <button data-speed="1" class="dropdown-item active">1.0x</button>
+            <button data-speed="1.25" class="dropdown-item">1.25x</button>
+            <button data-speed="1.5" class="dropdown-item">1.5x</button>
+            <button data-speed="2" class="dropdown-item">2.0x</button>
+          </div>
+          <div class="volume-control">
+            <button id="btn-volume" class="btn-icon btn-sm" title="音量 (M 静音)">🔊</button>
+            <div class="volume-slider-container">
+              <input type="range" id="volume-slider" min="0" max="100" value="80" class="volume-slider">
             </div>
           </div>
-          <span id="time-total" class="time-display">0:00</span>
+          <button id="btn-download" class="btn-icon btn-sm" title="下载">⬇️</button>
+          <button id="btn-queue-toggle" class="btn-icon btn-sm" title="播放队列">📋</button>
         </div>
-      </div>
-
-      <div class="player-controls-right">
-        <button id="btn-lyrics-toggle" class="btn-icon btn-sm" title="歌词">📝</button>
-        <button id="btn-speed" class="btn-icon btn-sm speed-btn" title="播放速度">1.0x</button>
-        <div id="speed-menu" class="dropdown speed-dropdown hidden">
-          <button data-speed="0.5" class="dropdown-item">0.5x</button>
-          <button data-speed="0.75" class="dropdown-item">0.75x</button>
-          <button data-speed="1" class="dropdown-item active">1.0x</button>
-          <button data-speed="1.25" class="dropdown-item">1.25x</button>
-          <button data-speed="1.5" class="dropdown-item">1.5x</button>
-          <button data-speed="2" class="dropdown-item">2.0x</button>
-        </div>
-        <div class="volume-control">
-          <button id="btn-volume" class="btn-icon btn-sm" title="音量">🔊</button>
-          <div class="volume-slider-container">
-            <input type="range" id="volume-slider" min="0" max="100" value="80" class="volume-slider">
-          </div>
-        </div>
-        <button id="btn-download" class="btn-icon btn-sm" title="下载">⬇️</button>
-        <button id="btn-queue-toggle" class="btn-icon btn-sm" title="播放队列">📋</button>
       </div>
     </footer>
   </div>
@@ -244,12 +248,44 @@
           </div>
           <button class="btn btn-primary" id="btn-add-user">添加</button>
         </div>
+        <p class="form-hint" style="font-size:12px;color:var(--text-muted);margin:-4px 0 12px;">
+          💡 新建用户默认不关联任何目录，请在添加后点击「📁 分配目录」分配。
+        </p>
         <div id="admin-user-list" class="admin-user-list">
           <!-- 动态生成 -->
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline modal-close">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分配目录弹窗 (v1.0.6) -->
+  <div id="modal-assign-dirs" class="modal-overlay hidden">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 id="assign-dirs-title">📁 分配目录</h3>
+        <button class="btn-icon modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="form-hint" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+          勾选允许该用户访问的目录；留空 = 完全禁止访问；勾选「全部」= 整个音乐库。
+        </p>
+        <div class="form-group">
+          <label class="checkbox-row">
+            <input type="checkbox" id="assign-dir-all">
+            <span><strong>全部音乐库</strong>（等同于管理员权限的查看范围，但用户仍非 admin）</span>
+          </label>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
+        <div id="assign-dir-list" class="assign-dir-list">
+          <!-- 动态生成 -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline modal-close">取消</button>
+        <button class="btn btn-primary" id="btn-save-dirs">保存</button>
       </div>
     </div>
   </div>
@@ -290,9 +326,9 @@
   </div>
 
   <!-- 脚本 -->
-  <script src="js/api.js?v=1.0.2"></script>
-  <script src="js/lyrics.js?v=1.0.2"></script>
-  <script src="js/player.js?v=1.0.2"></script>
-  <script src="js/app.js?v=1.0.2"></script>
+  <script src="js/api.js?v=1.0.6.3"></script>
+  <script src="js/lyrics.js?v=1.0.6.3"></script>
+  <script src="js/player.js?v=1.0.6.3"></script>
+  <script src="js/app.js?v=1.0.6.3"></script>
 </body>
 </html>

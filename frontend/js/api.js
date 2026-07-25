@@ -83,8 +83,18 @@ const API = (() => {
       const data = await request('POST', '/api/login', { username, password });
       if (data && data.token) {
         setToken(data.token);
+        // v1.0.6.2: remember role so the UI can hide admin-only buttons
+        try { localStorage.setItem('nas_role', data?.user?.role || 'user'); } catch (_) {}
       }
       return data;
+    },
+
+    isAdmin() {
+      try { return localStorage.getItem('nas_role') === 'admin'; } catch (_) { return false; }
+    },
+
+    clearSession() {
+      try { localStorage.removeItem('nas_role'); } catch (_) {}
     },
 
     // Artists
@@ -179,6 +189,20 @@ const API = (() => {
 
     async deleteUser(userId) {
       return request('DELETE', `/api/users/${userId}`);
+    },
+
+    // v1.0.6: per-user directory permissions
+    async getUserDirectories(userId) {
+      return request('GET', `/api/users/${userId}/directories`);
+    },
+
+    async updateUserDirectories(userId, directories) {
+      return request('PUT', `/api/users/${userId}/directories`, { directories });
+    },
+
+    async getAllDirectories() {
+      const res = await request('GET', '/api/directories');
+      return res?.directories || [];
     },
 
     // Theme

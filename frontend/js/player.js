@@ -284,6 +284,10 @@ const Player = (() => {
       btnSpeed, speedMenu,
       btnDownload, btnLyricsToggle, btnQueueToggle;
 
+  // 拖动状态必须放在模块级（bindEvents 外部），否则每次调用都新建，
+  // mousedown 设的 true 在 mousemove handler 里就读不到（因为 handler 是闭包旧的）
+  let isDragging = false;
+
   function cacheDOM() {
     btnPlay         = document.getElementById('btn-play');
     btnPrev         = document.getElementById('btn-prev');
@@ -437,22 +441,40 @@ const Player = (() => {
     });
 
     // Progress bar dragging
-    let isDragging = false;
     on(progressBar, 'mousedown', (e) => {
       isDragging = true;
       const rect = progressBar.getBoundingClientRect();
-      const pct = ((e.clientX - rect.left) / rect.width) * 100;
+      const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
       seekPercent(pct);
+      e.preventDefault();
     });
+    // 触摸事件支持（手机端）
+    if (progressBar) {
+      progressBar.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        const touch = e.touches[0];
+        const rect = progressBar.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100));
+        seekPercent(pct);
+        e.preventDefault();
+      }, { passive: false });
+    }
     document.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
+      if (!isDragging || !progressBar) return;
       const rect = progressBar.getBoundingClientRect();
       const pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
       seekPercent(pct);
     });
-    document.addEventListener('mouseup', () => {
-      isDragging = false;
-    });
+    document.addEventListener('touchmove', (e) => {
+      if (!isDragging || !progressBar) return;
+      const touch = e.touches[0];
+      if (!touch) return;
+      const rect = progressBar.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(100, ((touch.clientX - rect.left) / rect.width) * 100));
+      seekPercent(pct);
+    }, { passive: true });
+    document.addEventListener('mouseup', () => { isDragging = false; });
+    document.addEventListener('touchend', () => { isDragging = false; });
 
     // Speed menu
     on(btnSpeed, 'click', (e) => {
@@ -541,11 +563,18 @@ const Player = (() => {
     });
 
     // Keyboard shortcuts
+    // ─────────────────────────────────────────────
+    //   Space         播放 / 暂停
+    //   ← / →         上一首 / 下一首
+    //   ↑ / ↓         音量 ±10%
+    //   M             静音切换
+    // ─────────────────────────────────────────────
     document.addEventListener('keydown', (e) => {
-      // Don't handle if typing in an input
+      // Don't handle if typing in an input or with modifier
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
         return;
       }
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
 
       switch (e.code) {
         case 'Space':
@@ -554,27 +583,23 @@ const Player = (() => {
           break;
         case 'ArrowRight':
           e.preventDefault();
-          if (e.shiftKey) {
-            playNext();
-          } else {
-            seekTo(audio.currentTime + 5);
-          }
+          playNext();
           break;
         case 'ArrowLeft':
           e.preventDefault();
-          if (e.shiftKey) {
-            playPrev();
-          } else {
-            seekTo(audio.currentTime - 5);
-          }
+          playPrev();
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setVolume(Math.min(1, audio.volume + 0.05));
+          setVolume(Math.min(1, audio.volume + 0.1));
           break;
         case 'ArrowDown':
           e.preventDefault();
-          setVolume(Math.max(0, audio.volume - 0.05));
+          setVolume(Math.max(0, audio.volume - 0.1));
+          break;
+        case 'KeyM':
+          e.preventDefault();
+          toggleMute();
           break;
       }
     });
