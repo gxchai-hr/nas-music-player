@@ -688,5 +688,9 @@ const Player = (() => {
       try { return JSON.parse(localStorage.getItem('nas_player_state') || '{}').currentTime || 0; }
       catch { return 0; }
     },
+    get savedSongId() {
+      try { return JSON.parse(localStorage.getItem('nas_player_state') || '{}').lastSongId || null; }
+      catch { return null; }
+    },
   };
 })();

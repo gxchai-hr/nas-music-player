@@ -1063,6 +1063,7 @@ const App = (() => {
     // v1.0.6.7: 恢复上次播放位置 + 路由（在 Player.init 之后立即应用）
     const savedHash = Player.savedRouteHash;
     const savedTime = Player.savedCurrentTime;
+    const savedSongId = Player.savedSongId;
     if (savedTime > 0) {
       Player.setResumeTime(savedTime);
       console.log('[记忆] 将在音频加载完成后跳转到', savedTime, '秒');
@@ -1071,6 +1072,10 @@ const App = (() => {
       console.log('[记忆] 恢复路由到', savedHash);
       // 等首屏渲染完后再切换（避免阻塞）
       setTimeout(() => { window.location.hash = savedHash; }, 300);
+    }
+    // v1.0.6.10: 路由恢复完成后，尝试自动加载上次的歌曲并跳转进度
+    if (savedSongId) {
+      setTimeout(() => tryRestoreLastSong(savedSongId), 800);
     }
 
     // ── Login Form ──
@@ -1324,6 +1329,31 @@ const App = (() => {
       loadAlbums(),
       loadPlaylists(),
     ]);
+  }
+
+  // v1.0.6.10: 路由恢复后，自动加载上次的歌曲并跳到上次进度
+  async function tryRestoreLastSong(songId) {
+    if (!songId) return;
+    if (Player.currentSong && Player.currentSong.id === songId) {
+      console.log('[记忆] 歌曲已在播放中，跳过恢复');
+      return;
+    }
+    try {
+      const song = await API.getSong(songId);
+      if (!song) {
+        console.warn('[记忆] 歌曲 id=' + songId + ' 已不存在（可能被删除）');
+        return;
+      }
+      // 加载到播放器，但不自动播放
+      Player.playSongDirect(song, [song]);
+      Player.setResumeTime(Player.savedCurrentTime || 0);
+      Player.updateSongInfo(song);
+      // 高亮歌单中正在播放的歌曲
+      updateSongListHighlight();
+      console.log('[记忆] 已恢复歌曲:', song.title, '（将在音频加载后跳转到', Player.savedCurrentTime, '秒）');
+    } catch (e) {
+      console.error('[记忆] 恢复歌曲失败:', e.message);
+    }
   }
 
   function getStoredUsername() {
