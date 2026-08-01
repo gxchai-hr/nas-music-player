@@ -1879,13 +1879,14 @@ input::placeholder {
    bottom with position:fixed and shrink the
    right-hand controls to the bare essentials.
    ============================================= */
-@media (orientation: landscape) and (max-height: 800px) {
+/* 横屏且屏幕较矮时压缩布局（如手机横屏）。高度阈值用 500px，
+   避免误触桌面端浏览器（桌面端视口高度经常 ~600-800px）*/
+@media (orientation: landscape) and (max-height: 500px) {
   :root {
-    --player-height: 110px;  /* 28(进度条) + 4(gap) + 36(按钮) + 8x2(padding) ≈ 110px */
+    --player-height: 110px;
   }
 
   #app-page.active {
-    /* Drop the grid footer; main content fills the viewport. */
     display: block;
   }
 
