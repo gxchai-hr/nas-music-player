@@ -1060,6 +1060,19 @@ const App = (() => {
       }
     };
 
+    // v1.0.6.7: 恢复上次播放位置 + 路由（在 Player.init 之后立即应用）
+    const savedHash = Player.savedRouteHash;
+    const savedTime = Player.savedCurrentTime;
+    if (savedTime > 0) {
+      Player.setResumeTime(savedTime);
+      console.log('[记忆] 将在音频加载完成后跳转到', savedTime, '秒');
+    }
+    if (savedHash && savedHash !== window.location.hash) {
+      console.log('[记忆] 恢复路由到', savedHash);
+      // 等首屏渲染完后再切换（避免阻塞）
+      setTimeout(() => { window.location.hash = savedHash; }, 300);
+    }
+
     // ── Login Form ──
     $('#login-form').addEventListener('submit', async (e) => {
       e.preventDefault();

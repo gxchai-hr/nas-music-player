@@ -27,6 +27,9 @@ const Player = (() => {
       lastQueue: queue.map(s => s.id),
       shuffleMode,
       repeatMode,
+      // v1.0.6.7: 记忆播放位置 + 当前路由
+      currentTime: audio.currentTime || 0,
+      routeHash: window.location.hash || '',
     };
     localStorage.setItem('nas_player_state', JSON.stringify(state));
   }
@@ -56,6 +59,8 @@ const Player = (() => {
   }
 
   // ── Play ──
+  let _resumeTime = null;  // v1.0.6.7: 恢复播放位置
+
   function playSong(index) {
     if (index < 0 || index >= queue.length) return;
 
@@ -73,6 +78,18 @@ const Player = (() => {
     if (onSongChange) onSongChange(song, index);
     saveState();
   }
+
+  // v1.0.6.7: 监听音频元数据加载完成，恢复上次播放位置
+  function _tryResumeTime() {
+    if (_resumeTime != null && isFinite(_resumeTime) && _resumeTime > 0) {
+      // 容差 5 秒内不恢复（避免在播放末尾时跳回去）
+      if (audio.duration && _resumeTime < audio.duration - 5) {
+        audio.currentTime = _resumeTime;
+      }
+      _resumeTime = null;
+    }
+  }
+  audio.addEventListener('loadedmetadata', _tryResumeTime);
 
   function playSongDirect(song, songList) {
     if (songList) {
@@ -659,5 +676,17 @@ const Player = (() => {
 
     formatTime,
     updateProgressUI,
+
+    // v1.0.6.7: 记忆播放位置 + 路由
+    setResumeTime: (t) => { _resumeTime = t; },
+    saveState,
+    get savedRouteHash() {
+      try { return JSON.parse(localStorage.getItem('nas_player_state') || '{}').routeHash || ''; }
+      catch { return ''; }
+    },
+    get savedCurrentTime() {
+      try { return JSON.parse(localStorage.getItem('nas_player_state') || '{}').currentTime || 0; }
+      catch { return 0; }
+    },
   };
 })();
