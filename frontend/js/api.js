@@ -191,6 +191,11 @@ const API = (() => {
       return request('DELETE', `/api/users/${userId}`);
     },
 
+    // v1.0.7: change own password
+    async changePassword(oldPassword, newPassword) {
+      return request('POST', '/api/password', { old_password: oldPassword, new_password: newPassword });
+    },
+
     // v1.0.6: per-user directory permissions
     async getUserDirectories(userId) {
       return request('GET', `/api/users/${userId}/directories`);

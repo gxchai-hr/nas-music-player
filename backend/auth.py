@@ -14,7 +14,7 @@ from fastapi import Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 import config
-from models import get_user_by_id, create_user, get_user_by_username
+from models import get_user_by_id, create_user, get_user_by_username, update_password_hash
 
 security = HTTPBearer()
 
@@ -132,11 +132,17 @@ def bootstrap_admin():
                 users_list = users_data
             for u in users_list:
                 existing = get_user_by_username(u["username"])
+                pw = u.get("password", "")
+                if not pw:
+                    continue
                 if not existing:
-                    pw = u.get("password", "")
-                    if not pw:
-                        continue
                     create_user(u["username"], hash_password(pw), u.get("role", "admin"))
+                else:
+                    # v1.0.7: users.json 作为密码源，密码变化时同步更新数据库
+                    # 这样通过修改 users.json 改密码会在重启后生效
+                    if not verify_password(pw, existing["password_hash"]):
+                        update_password_hash(existing["id"], hash_password(pw))
+                        print(f"[auth] 用户 {u['username']} 密码已从 users.json 同步更新")
             return
         except (json.JSONDecodeError, KeyError):
             pass

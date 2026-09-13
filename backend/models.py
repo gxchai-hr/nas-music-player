@@ -137,6 +137,14 @@ def create_user(username: str, password_hash: str, role: str = "user"):
         return None
 
 
+def update_password_hash(user_id: int, password_hash: str):
+    """Update a user's password hash. Used by change-password API and users.json sync."""
+    conn = get_db()
+    conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, user_id))
+    conn.commit()
+    conn.close()
+
+
 def list_users():
     conn = get_db()
     rows = conn.execute("SELECT id, username, role, theme, created_at FROM users").fetchall()

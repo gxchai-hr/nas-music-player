@@ -776,6 +776,12 @@ const App = (() => {
         renderQueuePanel();
       });
     });
+
+    // v1.0.7: 队列较长时，自动滚动到当前播放项（已在视口内则不滚动）
+    const currentQueueItem = queueList.querySelector('.queue-item.current');
+    if (currentQueueItem && typeof currentQueueItem.scrollIntoView === 'function') {
+      currentQueueItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
   }
 
   // ── Add to Playlist Modal ──
@@ -1224,6 +1230,49 @@ const App = (() => {
       showAdminUsersModal();
     });
 
+    // v1.0.7: change password
+    $('#btn-change-password').addEventListener('click', (e) => {
+      e.preventDefault();
+      $('#user-dropdown').classList.add('hidden');
+      $('#cp-old-password').value = '';
+      $('#cp-new-password').value = '';
+      $('#cp-confirm-password').value = '';
+      $('#cp-error').classList.add('hidden');
+      $('#modal-change-password').classList.remove('hidden');
+      $('#cp-old-password').focus();
+    });
+
+    $('#btn-confirm-change-password').addEventListener('click', async () => {
+      const oldPw = $('#cp-old-password').value;
+      const newPw = $('#cp-new-password').value;
+      const confirmPw = $('#cp-confirm-password').value;
+      const errEl = $('#cp-error');
+
+      if (!oldPw || !newPw) {
+        errEl.textContent = '请填写完整';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (newPw.length < 4) {
+        errEl.textContent = '新密码至少 4 位';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (newPw !== confirmPw) {
+        errEl.textContent = '两次输入的新密码不一致';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      try {
+        await API.changePassword(oldPw, newPw);
+        $('#modal-change-password').classList.add('hidden');
+        toast('密码修改成功', 'success');
+      } catch (err) {
+        errEl.textContent = err.message || '修改失败，请重试';
+        errEl.classList.remove('hidden');
+      }
+    });
+
     // Add user button
     $('#btn-add-user').addEventListener('click', async () => {
       const username = $('#new-user-username').value.trim();
@@ -1370,11 +1419,17 @@ const App = (() => {
   }
 
   function updateSongListHighlight() {
+    let activeRow = null;
     $$('.song-row').forEach(row => {
       const songId = parseInt(row.dataset.songId);
       const isPlaying = Player.currentSong && Player.currentSong.id === songId;
       row.classList.toggle('playing', isPlaying);
+      if (isPlaying) activeRow = row;
     });
+    // v1.0.7: 歌单很长时，将当前播放曲目滚动到可视区域（已在视口内则不滚动，避免打扰）
+    if (activeRow && typeof activeRow.scrollIntoView === 'function') {
+      activeRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
   }
 
   // Start app when DOM ready

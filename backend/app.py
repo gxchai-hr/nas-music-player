@@ -18,7 +18,7 @@ import config
 from models import (
     init_db,
     get_user_by_username, get_user_by_id, create_user, list_users, delete_user,
-    update_user_theme,
+    update_user_theme, update_password_hash,
     get_song_by_id, list_artists, list_albums, list_songs, search_songs,
     create_playlist, get_user_playlists, add_to_playlist, remove_from_playlist,
     delete_playlist, playlist_exists,
@@ -110,7 +110,7 @@ async def security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
     # No cache for static files in development
     if request.url.path.startswith(("/css/", "/js/")):
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -165,6 +165,12 @@ class UpdateUserDirectoriesRequest(BaseModel):
     directories: list = []
 
 
+class ChangePasswordRequest(BaseModel):
+    """v1.0.7: body for POST /api/password."""
+    old_password: str
+    new_password: str
+
+
 # ---------------------------------------------------------------------------
 # Auth endpoints
 # ---------------------------------------------------------------------------
@@ -193,6 +199,20 @@ def login(req: LoginRequest, request: Request):
 @app.get("/api/user/profile")
 def get_profile(user: dict = Depends(get_current_user)):
     return user
+
+
+@app.post("/api/password")
+def change_password(req: ChangePasswordRequest, user: dict = Depends(get_current_user)):
+    """v1.0.7: 当前用户修改自己的密码（需验证原密码）。"""
+    if len(req.new_password) < 4:
+        raise HTTPException(status_code=400, detail="新密码至少 4 位")
+    if len(req.new_password) > 128:
+        raise HTTPException(status_code=400, detail="新密码过长（最多 128 位）")
+    db_user = get_user_by_id(user["id"])
+    if not db_user or not verify_password(req.old_password, db_user["password_hash"]):
+        raise HTTPException(status_code=400, detail="原密码错误")
+    update_password_hash(db_user["id"], hash_password(req.new_password))
+    return {"message": "密码已更新"}
 
 
 # ---------------------------------------------------------------------------

@@ -14,6 +14,7 @@ const Player = (() => {
   let shuffleOrder = [];
   let onSongChange = null;
   let onStateChange = null;
+  let currentSpeed = 1;   // v1.0.7: 记住当前倍速，切歌后保持
 
   // DOM references (set on init)
   let els = {};
@@ -40,7 +41,10 @@ const Player = (() => {
       if (!raw) return;
       const state = JSON.parse(raw);
       if (state.volume !== undefined) audio.volume = state.volume;
-      if (state.speed !== undefined) audio.playbackRate = state.speed;
+      if (state.speed !== undefined) {
+        currentSpeed = state.speed;
+        audio.playbackRate = state.speed;
+      }
       if (state.shuffleMode !== undefined) shuffleMode = state.shuffleMode;
       if (state.repeatMode !== undefined) repeatMode = state.repeatMode;
       return state;
@@ -69,6 +73,8 @@ const Player = (() => {
 
     audio.src = API.getStreamUrl(song.id);
     audio.load();
+    // v1.0.7: 切歌后保持用户设置的倍速（audio.load() 会重置 playbackRate 为 1）
+    audio.playbackRate = currentSpeed;
 
     audio.play().catch(() => {
       // Autoplay blocked, user needs to interact
@@ -228,6 +234,7 @@ const Player = (() => {
 
   // ── Speed ──
   function setSpeed(rate) {
+    currentSpeed = rate;
     audio.playbackRate = rate;
     updateSpeedUI();
     saveState();
@@ -576,6 +583,8 @@ const Player = (() => {
     });
 
     audio.addEventListener('loadedmetadata', () => {
+      // v1.0.7: 元数据加载完成后再次确保倍速生效（某些浏览器 load() 后重置）
+      audio.playbackRate = currentSpeed;
       updateProgressUI();
     });
 
